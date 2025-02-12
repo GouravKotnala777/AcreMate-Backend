@@ -16,7 +16,7 @@ export const isUserAuthenticated = async(req:Request, _:Response, next:NextFunct
     
         if (!token) return next(new ErrorHandler("Token not found", 404));
         
-        const verifyToken = await jsonWebToken.verify(token, "thisissecret") as JwtPayload;
+        const verifyToken = await jsonWebToken.verify(token, process.env.JWT_SECRET as string) as JwtPayload;
         
         const findUserByUserID = await User.findById(verifyToken._id);
         

@@ -14,7 +14,6 @@ export interface UserTypes{
     updatedAt:Date;
 
     comparePassword:(password:string) => Promise<boolean>;
-    generateToken:() => Promise<string>;
 };
 export type CreateUserBodyTypes = Pick<UserTypes, "name"|"email"|"password"|"gender"|"mobile"|"role">;
 export type LoginUserBodyTypes = Pick<UserTypes, "email"|"password">;
@@ -58,11 +57,6 @@ userSchema.pre("save", async function(next){
 userSchema.methods.comparePassword = async function(password:string){
     const isPasswordMatched = await bcryptJS.compare(password, this.password);
     return isPasswordMatched;
-};
-
-userSchema.methods.generateToken = async function (){
-    const token = await jsonWebToken.sign({_id:this._id}, "thisissecret", {expiresIn:"3d"});
-    return token;
 };
 
 const userModel:Model<UserTypes> = mongoose.models.User || mongoose.model<UserTypes>("User", userSchema);

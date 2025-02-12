@@ -11,7 +11,7 @@ export const sendToken = async(
     res:Response,
     next:NextFunction) => {
         try {
-            const generatedToken = await jsonWebToken.sign({_id:userID}, "thisissecret", {expiresIn:"3d"});
+            const generatedToken = await jsonWebToken.sign({_id:userID}, process.env.JWT_SECRET as string, {expiresIn:"3d"});
         
             res.cookie("userToken", generatedToken, cookieOptions);
             return generatedToken;
