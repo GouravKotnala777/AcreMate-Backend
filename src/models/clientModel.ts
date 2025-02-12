@@ -8,9 +8,11 @@ export interface ClientTypes{
     email:string;
     mobile:string;
     gender:"male"|"female"|"other";
+    ownerShipStatus:"pending"|"completed"|"registered"|"cancelled";
     createdAt:Date;
     updatedAt:Date;
 };
+export type CreateClientBodyTypes = Pick<ClientTypes, "serialNumber"|"name"|"guardian"|"email"|"mobile"|"gender">;
 
 const clientSchema = new mongoose.Schema<ClientTypes>({
     serialNumber:{
@@ -37,6 +39,11 @@ const clientSchema = new mongoose.Schema<ClientTypes>({
     guardian:{
         type:String,
         required:true
+    },
+    ownerShipStatus:{
+        type:String,
+        enum:["pending", "completed", "registered", "cancelled"],
+        default:"pending"
     }
 }, {timestamps:true});
 

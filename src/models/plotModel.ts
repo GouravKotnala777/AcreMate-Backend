@@ -16,9 +16,15 @@ export interface PlotTypes{
     shouldPay:number;
     paid:number;
     agentID:ObjectId|null;
+    plotStatus:"pending"|"completed"|"registered"|"cencelled";
     createdAt:Date;
     updatedAt:Date;
 };
+
+export type CreatePlotBodyTypes = Pick<PlotTypes, "plotNo"|"size"|"rate"|"dimention"|"site"|"clientID"|"duration"|"hasSold"|"shouldPay"|"paid"|"agentID"|"plotStatus">;
+export type UpdatePlotBodyTypes = Pick<PlotTypes, "plotNo"|"size"|"rate"|"dimention"|"clientID"|"duration"|"hasSold"|"shouldPay"|"paid"|"agentID"|"plotStatus">&{plotID:ObjectId;};
+
+
 
 const plotSchema = new mongoose.Schema<PlotTypes>({
     plotNo:{
@@ -66,6 +72,11 @@ const plotSchema = new mongoose.Schema<PlotTypes>({
         type:mongoose.Schema.Types.ObjectId,
         ref:"User",
         default:null
+    },
+    plotStatus:{
+        type:String,
+        enum:["pending", "completed", "registered", "cencelled"],
+        default:"pending"
     }
 }, {timestamps:true});
 
