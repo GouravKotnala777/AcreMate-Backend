@@ -1,4 +1,4 @@
-import { NextFunction, Request } from "express";
+import { NextFunction, Request, Response } from "express";
 import { ErrorHandler } from "../utils/utilClasses";
 import jsonWebToken, { JwtPayload } from "jsonwebtoken";
 import User, { UserTypes } from "../models/userModel";
@@ -8,7 +8,7 @@ export interface AuthReqTypes extends Request {
     user:UserTypes;
 }
 
-export const isUserAuthenticated = async(req:Request, next:NextFunction) => {
+export const isUserAuthenticated = async(req:Request, _:Response, next:NextFunction) => {
     try {
         const token = req.cookies.userToken || req.headers.cookie?.split(" ")[1];
     
