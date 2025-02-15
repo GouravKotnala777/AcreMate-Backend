@@ -21,7 +21,8 @@ const clientSchema = new mongoose.Schema<ClientTypes>({
     },
     name:{
         type:String,
-        required:true
+        required:true,
+        lowercase:true
     },
     email:{
         type:String,

@@ -1,6 +1,5 @@
 import mongoose, { Model, ObjectId } from "mongoose";
 import bcryptJS from "bcryptjs";
-import jsonWebToken from "jsonwebtoken";
 
 export interface UserTypes{
     _id:ObjectId;
@@ -15,21 +14,23 @@ export interface UserTypes{
 
     comparePassword:(password:string) => Promise<boolean>;
 };
-export type CreateUserBodyTypes = Pick<UserTypes, "name"|"email"|"password"|"gender"|"mobile"|"role">;
+export type CreateUserBodyTypes = Pick<UserTypes, "email"|"password"|"gender"|"mobile"|"role">&{firstName:string; lastName:string};
 export type LoginUserBodyTypes = Pick<UserTypes, "email"|"password">;
 
 const userSchema = new mongoose.Schema<UserTypes>({
     name:{
         type:String,
-        required:true
+        required:true,
+        lowercase:true
     },
     email:{
         type:String,
-        required:true
+        required:true,
+        lowercase:true
     },
     password:{
         type:String,
-        required:true
+        required:true,
     },
     gender:{
         type:String,
@@ -43,19 +44,24 @@ const userSchema = new mongoose.Schema<UserTypes>({
     role:{
         type:String,
         enum:["agent", "admin"],
-        required:true
+        default:"agent"
     }
 }, {timestamps:true});
 
 userSchema.pre("save", async function(next){
     if (!this.isModified("password")) return next();
 
-    this.password = await bcryptJS.hash(this.password as string, 6);
+    const hashedPassword = bcryptJS.hash(this.password as string, 7);
+    this.password = await hashedPassword;
     next();
 });
 
 userSchema.methods.comparePassword = async function(password:string){
+    console.log({s:password, hash:this.password});
+    
     const isPasswordMatched = await bcryptJS.compare(password, this.password);
+    console.log({isPasswordMatched});
+    
     return isPasswordMatched;
 };
 

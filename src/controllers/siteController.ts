@@ -1,5 +1,5 @@
 import { NextFunction, Request, Response } from "express";
-import Site, { SiteTypes } from "../models/siteModel";
+import Site, { CreateSiteBodyTypes, SiteTypes } from "../models/siteModel";
 import { ErrorHandler } from "../utils/utilClasses";
 import { ObjectId } from "mongoose";
 
@@ -19,7 +19,7 @@ export const findAllSites = async(req:Request, res:Response, next:NextFunction) 
 // Create site by admin
 export const createSite = async(req:Request, res:Response, next:NextFunction) => {
     try {
-        const {siteName, totalSize}:SiteTypes = req.body;
+        const {siteName, totalSize}:CreateSiteBodyTypes = req.body;
 
         const isSiteExist = await Site.findOne({
             siteName
@@ -41,7 +41,7 @@ export const createSite = async(req:Request, res:Response, next:NextFunction) =>
 // Update site by admin
 export const updateSite = async(req:Request, res:Response, next:NextFunction) => {
     try {
-        const {siteID, siteName, totalSize}:Partial<SiteTypes>&{siteID:ObjectId} = req.body;
+        const {siteID, siteName, totalSize}:Partial<CreateSiteBodyTypes>&{siteID:ObjectId} = req.body;
 
         const findSiteByIDAndUpdate = await Site.findByIdAndUpdate(siteID, {
             ...(siteName&&{siteName}),

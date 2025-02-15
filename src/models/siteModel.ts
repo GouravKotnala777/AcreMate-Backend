@@ -5,9 +5,14 @@ export interface SiteTypes{
     siteName:string;
     totalSize:number;
 };
+export type CreateSiteBodyTypes = Pick<SiteTypes, "siteName"|"totalSize">;
 
 const siteSchema = new mongoose.Schema<SiteTypes>({
-    siteName:String,
+    siteName:{
+        type:String,
+        lowercase:true,
+        required:true
+    },
     totalSize:Number
 }, {timestamps:true});
 

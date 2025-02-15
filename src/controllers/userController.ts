@@ -3,6 +3,7 @@ import User, { CreateUserBodyTypes, LoginUserBodyTypes } from "../models/userMod
 import { ErrorHandler } from "../utils/utilClasses";
 import { sendToken } from "../utils/utilFunctions";
 import { cookieOptions } from "../utils/utilConstants";
+import { AuthReqTypes } from "../middlewares/auth";
 
 // Get all users by admin
 export const findAllUsers = async(req:Request, res:Response, next:NextFunction) => {
@@ -16,22 +17,37 @@ export const findAllUsers = async(req:Request, res:Response, next:NextFunction) 
     }
 };
 
+// Logged in user profile
+export const myProfile = async(req:Request, res:Response, next:NextFunction) => {
+    try {        
+        res.status(200).json({success:true, message:"Logged in user", jsonData:(req as AuthReqTypes).user});
+    } catch (error) {
+        console.log(error);
+        next(error);
+    }
+};
+
 // User register
 export const register = async(req:Request, res:Response, next:NextFunction) => {
     try {
-        const {name, email, password, gender, mobile, role}:CreateUserBodyTypes = req.body;
+        const {firstName, lastName, email, password, gender, mobile}:CreateUserBodyTypes = req.body;
+
+        console.log({firstName, lastName, email, password, gender, mobile});
+        
+        if (!firstName || !lastName || !email || !password || !gender || !mobile) return next(new ErrorHandler("All fields are required", 400));
 
         const isUserExist = await User.findOne({email});
 
         if (isUserExist) return next(new ErrorHandler("User already exist", 401));
 
         const newUser = await User.create({
-            name, email, password, gender, mobile, role 
+            name:firstName+lastName, email, password, gender, mobile
         });
 
         res.status(200).json({success:true, message:"User created", jsonData:newUser});
     } catch (error) {
         console.log(error);
+        next(error);
     }
 };
 
@@ -40,15 +56,18 @@ export const login = async(req:Request, res:Response, next:NextFunction) => {
     try {
         const {email, password}:LoginUserBodyTypes = req.body;
 
-        const isUserExist = await User.findOne({email});
 
+        if (!email || !password) return next(new ErrorHandler("All fields are required", 400));
+
+
+        console.log({email, password});
+        
+
+        const isUserExist = await User.findOne({email});
+        
         if (!isUserExist) return next(new ErrorHandler("Wrong email or password", 401));
 
-        //const existedUser = await User.create({
-        //    email, password
-        //});
-
-        const isPasswordMatched = await isUserExist.comparePassword(password as string);
+        const isPasswordMatched = await isUserExist.comparePassword(password);        
 
         if (!isPasswordMatched) return next(new ErrorHandler("Wrong email or password", 401));
 
@@ -57,6 +76,7 @@ export const login = async(req:Request, res:Response, next:NextFunction) => {
         res.status(200).json({success:true, message:"User created", jsonData:isUserExist});
     } catch (error) {
         console.log(error);
+        next(error);
     }
 };
 

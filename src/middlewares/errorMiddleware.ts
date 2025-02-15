@@ -1,8 +1,8 @@
-import { Request, Response } from "express";
+import { NextFunction, Request, Response } from "express";
 import { ErrorHandler } from "../utils/utilClasses";
 
 
-const errorMiddleware = async(err:ErrorHandler, req:Request, res:Response) => {
+const errorMiddleware = async(err:ErrorHandler, req:Request, res:Response, next:NextFunction) => {
     let statusCode = err.statusCode || 500;
     let message = err.message || "Internal server error";
     if (err.name === "CastError") {
@@ -12,7 +12,7 @@ const errorMiddleware = async(err:ErrorHandler, req:Request, res:Response) => {
     if (err.name === "ValidationError") {
         statusCode = 400;
     }
-    res.status(err.statusCode).json({success:false, message:err.message, jsonData:{errName:err.name, errStack:err.stack}});
+    res.status(statusCode).json({success:false, message, jsonData:{}});
 };
 
 export default errorMiddleware;
