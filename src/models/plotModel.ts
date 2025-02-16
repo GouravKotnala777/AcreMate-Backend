@@ -5,10 +5,8 @@ export interface PlotTypes{
     plotNo:number;
     size:number;
     rate:number;
-    dimention:{
-        length:number;
-        width:number;
-    };
+    length:number;
+    breath:number;
     site:string;
     clientID:ObjectId|null;
     duration:number;
@@ -16,13 +14,13 @@ export interface PlotTypes{
     shouldPay:number;
     paid:number;
     agentID:ObjectId|null;
-    plotStatus:"pending"|"completed"|"registered"|"cencelled";
+    plotStatus:"pending"|"completed"|"registered"|"vacant";
     createdAt:Date;
     updatedAt:Date;
 };
 
-export type CreatePlotBodyTypes = Pick<PlotTypes, "plotNo"|"size"|"rate"|"dimention"|"site"|"clientID"|"duration"|"hasSold"|"shouldPay"|"paid"|"agentID"|"plotStatus">;
-export type UpdatePlotBodyTypes = Pick<PlotTypes, "plotNo"|"size"|"rate"|"dimention"|"clientID"|"duration"|"hasSold"|"shouldPay"|"paid"|"agentID"|"plotStatus">&{plotID:ObjectId;};
+export type CreatePlotBodyTypes = Pick<PlotTypes, "plotNo"|"size"|"rate"|"site"|"duration"|"length"|"breath">&Partial<Pick<PlotTypes, "plotStatus"|"clientID"|"hasSold"|"agentID"|"paid"|"shouldPay"|"updatedAt"|"createdAt">>;
+export type UpdatePlotBodyTypes = Partial<Pick<PlotTypes, "plotNo"|"size"|"rate"|"clientID"|"duration"|"length"|"breath"|"hasSold"|"shouldPay"|"paid"|"agentID"|"plotStatus">>&{plotID:string;};
 
 
 
@@ -39,10 +37,8 @@ const plotSchema = new mongoose.Schema<PlotTypes>({
         type:Number,
         required:true
     },
-    dimention:{
-        length:Number,
-        width:Number
-    },
+    length:Number,
+    breath:Number,
     site:{
         type:String,
         required:true
@@ -54,7 +50,8 @@ const plotSchema = new mongoose.Schema<PlotTypes>({
     },
     duration:{
         type:Number,
-        required:true
+        required:true,
+        default:42
     },
     hasSold:{
         type:Boolean,
@@ -75,8 +72,8 @@ const plotSchema = new mongoose.Schema<PlotTypes>({
     },
     plotStatus:{
         type:String,
-        enum:["pending", "completed", "registered", "cencelled"],
-        default:"pending"
+        enum:["pending", "completed", "registered", "vacant"],
+        default:"vacant"
     }
 }, {timestamps:true});
 
