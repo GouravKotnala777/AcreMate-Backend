@@ -15,6 +15,22 @@ export const findAllSlips = async(req:Request, res:Response, next:NextFunction) 
     }
 };
 
+// Get single slip by admin
+export const findSingleSlip = async(req:Request, res:Response, next:NextFunction) => {
+    try {
+        const {slipID} = req.query;
+
+        if (!slipID)return next(new ErrorHandler("slipID not found", 404));
+
+        const findSlipByID = await Slip.findById(slipID);
+
+        res.status(200).json({success:true, message:"Single slip", jsonData:findSlipByID});
+    } catch (error) {
+        console.log(error);
+        next(error);
+    }
+};
+
 // Create slip by admin
 export const createSlip = async(req:Request, res:Response, next:NextFunction) => {
     try {

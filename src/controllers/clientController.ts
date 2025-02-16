@@ -14,6 +14,21 @@ export const findAllClients = async(req:Request, res:Response, next:NextFunction
         next(error);
     }
 };
+// Get single client by admin
+export const findSingleClient = async(req:Request, res:Response, next:NextFunction) => {
+    try {
+        const {clientID} = req.query;
+
+        if (!clientID)return next(new ErrorHandler("clientID not found", 404));
+
+        const findClientByID = await Client.findById(clientID);
+
+        res.status(200).json({success:true, message:"Single client", jsonData:findClientByID});
+    } catch (error) {
+        console.log(error);
+        next(error);
+    }
+};
 // Create new client by admin
 export const createClient = async(req:Request, res:Response, next:NextFunction) => {
     try {

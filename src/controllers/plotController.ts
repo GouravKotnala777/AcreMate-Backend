@@ -15,10 +15,26 @@ export const findAllPlots = async(req:Request, res:Response, next:NextFunction) 
     }
 };
 
+// Get single plot by admin
+export const findSinglePlot = async(req:Request, res:Response, next:NextFunction) => {
+    try {
+        const {plotID} = req.query;
+
+        if (!plotID)return next(new ErrorHandler("plotID not found", 404));
+
+        const findPlotByID = await Plot.findById(plotID);
+
+        res.status(200).json({success:true, message:"Single plot", jsonData:findPlotByID});
+    } catch (error) {
+        console.log(error);
+        next(error);
+    }
+};
+
 // Create plot by admin
 export const createPlot = async(req:Request, res:Response, next:NextFunction) => {
     try {
-        const {plotNo, size, rate, dimention,
+        const {plotNo, size, rate, length, breath,
             site, clientID, duration, hasSold,
             shouldPay, paid, agentID, plotStatus}:CreatePlotBodyTypes = req.body;
 
@@ -29,7 +45,7 @@ export const createPlot = async(req:Request, res:Response, next:NextFunction) =>
         if (isPlottExist) return next(new ErrorHandler("Plot no. is already in use", 409));
 
         const newPlot = await Plot.create({
-            plotNo, size, rate, dimention,
+            plotNo, size, rate, length, breath,
             site, clientID, duration, hasSold,
             shouldPay, paid, agentID, plotStatus
         });
@@ -44,15 +60,16 @@ export const createPlot = async(req:Request, res:Response, next:NextFunction) =>
 // Update plot by admin
 export const updatePlot = async(req:Request, res:Response, next:NextFunction) => {
     try {
-        const {plotID, plotNo, size, rate, 
-            dimention, clientID, duration, hasSold,
+        const {plotID, plotNo, size, rate, length, breath, 
+            clientID, duration, hasSold,
             shouldPay, paid, agentID, plotStatus}:UpdatePlotBodyTypes = req.body;
 
         const findPlotByIDAndUpdate = await Plot.findByIdAndUpdate(plotID, {
             ...(plotNo&&{plotNo}),
             ...(size&&{size}),
             ...(rate&&{rate}),
-            ...(dimention&&{dimention}),
+            ...(length&&{length}),
+            ...(breath&&{breath}),
             ...(clientID&&{clientID}),
             ...(duration&&{duration}),
             ...(hasSold&&{hasSold}),

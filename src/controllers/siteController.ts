@@ -16,6 +16,22 @@ export const findAllSites = async(req:Request, res:Response, next:NextFunction) 
     }
 };
 
+// Get single site by admin
+export const findSingleSite = async(req:Request, res:Response, next:NextFunction) => {
+    try {
+        const {siteID} = req.query;
+
+        if (!siteID)return next(new ErrorHandler("siteID not found", 404));
+
+        const findSiteByID = await Site.findById(siteID);
+
+        res.status(200).json({success:true, message:"Single site", jsonData:findSiteByID});
+    } catch (error) {
+        console.log(error);
+        next(error);
+    }
+};
+
 // Create site by admin
 export const createSite = async(req:Request, res:Response, next:NextFunction) => {
     try {

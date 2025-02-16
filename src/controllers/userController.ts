@@ -17,6 +17,22 @@ export const findAllUsers = async(req:Request, res:Response, next:NextFunction) 
     }
 };
 
+// Get single user by admin
+export const findSingleUser = async(req:Request, res:Response, next:NextFunction) => {
+    try {
+        const {userID} = req.query;
+
+        if (!userID)return next(new ErrorHandler("userID not found", 404));
+
+        const findUserByID = await User.findById(userID);
+
+        res.status(200).json({success:true, message:"Single user", jsonData:findUserByID});
+    } catch (error) {
+        console.log(error);
+        next(error);
+    }
+};
+
 // Logged in user profile
 export const myProfile = async(req:Request, res:Response, next:NextFunction) => {
     try {        
