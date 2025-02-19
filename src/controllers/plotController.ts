@@ -1,7 +1,9 @@
 import { NextFunction, Request, Response } from "express";
-import Plot, { CreatePlotBodyTypes, UpdatePlotBodyTypes } from "../models/plotModel";
+import Plot, { CreatePlotBodyTypes, PlotTypes, UpdatePlotBodyTypes } from "../models/plotModel";
 import { ErrorHandler } from "../utils/utilClasses";
-import mongoose, { ObjectId } from "mongoose";
+import { ObjectId } from "mongoose";
+import Slip, { CreateSlipBodyTypes, SlipTypes } from "../models/slipModel";
+import Client, { CreateClientBodyTypes } from "../models/clientModel";
 
 // Get all plots by admin
 export const findAllPlots = async(req:Request, res:Response, next:NextFunction) => {
@@ -21,36 +23,153 @@ export const findSinglePlot = async(req:Request, res:Response, next:NextFunction
         const {plotID} = req.query;
 
         if (!plotID)return next(new ErrorHandler("plotID not found", 404));
-
+        
         const findPlotByID = await Plot.findById(plotID);
+        
+        if (!findPlotByID)return next(new ErrorHandler("Plot not found", 404));
 
-        res.status(200).json({success:true, message:"Single plot", jsonData:findPlotByID});
+        const findFirstPayment = await Slip.findOne({
+            plotID,
+            clientID:findPlotByID.clientID
+        }).sort({_id:1});
+        const findLastPayment = await Slip.findOne({
+            plotID,
+            clientID:findPlotByID.clientID
+        }).sort({_id:-1});
+        
+        res.status(200).json({success:true, message:"Single plot", jsonData:{singlePlot:findPlotByID, firstSlip:findFirstPayment, lastSlip:findLastPayment}});
     } catch (error) {
         console.log(error);
         next(error);
     }
 };
 
-// Create plot by admin
-export const createPlot = async(req:Request, res:Response, next:NextFunction) => {
+// Create plot and assign to client with new slip by admin
+export const createPlotAndAssign = async(req:Request, res:Response, next:NextFunction) => {
     try {
         const {plotNo, size, rate, length, breath,
-            site, clientID, duration, hasSold,
-            shouldPay, paid, agentID, plotStatus}:CreatePlotBodyTypes = req.body;
+            site, duration, hasSold,
+            agentID,
 
-        const isPlottExist = await Plot.findOne({
+
+            serialNumber, name, guardian, email, gender, mobile,
+
+
+            slipType, slipNo, modeOfPayment, amount
+        
+        }:CreatePlotBodyTypes&CreateClientBodyTypes&CreateSlipBodyTypes = req.body;
+
+        const isClientExist = await Client.findOne({
+            serialNumber
+        });
+
+        if (isClientExist) return next(new ErrorHandler("Serial no. is already in use", 409));
+
+        const isPlotExist = await Plot.findOne({
             plotNo
         });
 
-        if (isPlottExist) return next(new ErrorHandler("Plot no. is already in use", 409));
+        if (isPlotExist) return next(new ErrorHandler("Plot no. is already in use", 409));
+
+        const newClient = await Client.create({
+            serialNumber, name, guardian, email, gender, mobile
+        });
+
+        if (!newClient) return next(new ErrorHandler("Internal server error for newClient", 500));
+
 
         const newPlot = await Plot.create({
             plotNo, size, rate, length, breath,
-            site, clientID, duration, hasSold,
-            shouldPay, paid, agentID, plotStatus
+            site, clientID:newClient._id, duration, hasSold,
+            shouldPay:((size*rate)/duration), paid:amount, agentID,
+            plotStatus:amount < (size*rate) ? "pending" : "completed"
         });
 
-        res.status(200).json({success:true, message:"Plot created", jsonData:newPlot});
+        if (!newPlot) return next(new ErrorHandler("Internal server error for newPlot", 500));
+        
+        const newSlip = await Slip.create({
+            slipType, slipNo, modeOfPayment, amount, agentID, clientID:newClient._id, plotID:newPlot._id
+        })
+        
+        if (!newSlip) return next(new ErrorHandler("Internal server error for newSlip", 500));
+
+        res.status(200).json({success:true, message:"Plot created and assigned", jsonData:newPlot});
+    } catch (error) {
+        console.log(error);
+        next(error);
+    }
+};
+
+// Assign existing plot to new client with new slip by admin
+export const assignPlotToClient = async(req:Request, res:Response, next:NextFunction) => {
+    try {
+        const {
+            plotID, agentID,
+
+
+            serialNumber, name, guardian, email, gender, mobile,
+
+
+            slipType, slipNo, modeOfPayment, amount
+        
+        }:CreatePlotBodyTypes&CreateClientBodyTypes&CreateSlipBodyTypes = req.body;
+
+        console.log("--------------- (1)");
+        
+        const isClientExist = await Client.findOne({
+            serialNumber
+        });
+        console.log("--------------- (2)");
+        
+        if (isClientExist) return next(new ErrorHandler("Serial no. is already in use", 409));
+        console.log("--------------- (3)");
+        
+        const newClient = await Client.create({
+            serialNumber, name, guardian, email, gender, mobile
+        });
+        console.log("--------------- (4)");
+        
+        if (!newClient) return next(new ErrorHandler("Internal server error for newClient", 500));
+        
+        console.log("--------------- (5)");
+        console.log({plotID});
+        
+        const findPlotByID = await Plot.findById(plotID);
+
+        console.log({findPlotByID});
+        
+        console.log("--------------- (6)");
+        
+        if (!findPlotByID) return next(new ErrorHandler("Internal server error for newPlot", 500));
+        console.log("--------------- (7)");
+        
+
+        const plotTotalValue = findPlotByID.size*findPlotByID.rate;
+        const emi = plotTotalValue/findPlotByID.duration;
+
+        findPlotByID.clientID = newClient._id;
+        findPlotByID.agentID = agentID;
+        findPlotByID.shouldPay = Number(emi);
+        findPlotByID.paid = Number(amount);
+        if (findPlotByID.paid < (findPlotByID.size*findPlotByID.rate)) {
+            findPlotByID.plotStatus = "pending";
+        }
+        else{
+            findPlotByID.plotStatus = "completed";
+        }
+
+        const updatePlot = await findPlotByID.save();
+
+
+        const newSlip = await Slip.create({
+            slipType, slipNo, modeOfPayment, amount, agentID, clientID:newClient._id, plotID:updatePlot._id
+        });
+        console.log("--------------- (8)");
+        
+        if (!newSlip) return next(new ErrorHandler("Internal server error for newSlip", 500));
+        console.log("--------------- (9)");
+        
+        res.status(200).json({success:true, message:"Plot created and assigned", jsonData:updatePlot});
     } catch (error) {
         console.log(error);
         next(error);

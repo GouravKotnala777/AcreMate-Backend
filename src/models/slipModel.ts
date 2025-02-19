@@ -26,7 +26,8 @@ const slipSchema = new mongoose.Schema<SlipTypes>({
     },
     slipNo:{
         type:Number,
-        required:true
+        required:true,
+        unique:true
     },
     modeOfPayment:{
         type:String,

@@ -17,6 +17,20 @@ export const findAllUsers = async(req:Request, res:Response, next:NextFunction) 
     }
 };
 
+// Get all agents by admin (_id and name only)
+export const findAllAgents = async(req:Request, res:Response, next:NextFunction) => {
+    try {
+        const allAgents = await User.find({
+            role:"agent"
+        }).select("_id name");
+
+        res.status(200).json({success:true, message:"All agents", jsonData:allAgents});
+    } catch (error) {
+        console.log(error);
+        next(error);
+    }
+};
+
 // Get single user by admin
 export const findSingleUser = async(req:Request, res:Response, next:NextFunction) => {
     try {
