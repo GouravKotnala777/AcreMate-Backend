@@ -2,6 +2,7 @@ import { NextFunction, Request, Response } from "express";
 import Site, { CreateSiteBodyTypes, SiteTypes } from "../models/siteModel";
 import { ErrorHandler } from "../utils/utilClasses";
 import { ObjectId } from "mongoose";
+import Plot from "../models/plotModel";
 
 
 // Get all Sites by admin
@@ -10,6 +11,18 @@ export const findAllSites = async(req:Request, res:Response, next:NextFunction) 
         const allSites = await Site.find();
 
         res.status(200).json({success:true, message:"All sites", jsonData:allSites});
+    } catch (error) {
+        console.log(error);
+        next(error);
+    }
+};
+
+// Get all sites name array by admin (site name array only)
+export const findAllSitesName = async(req:Request, res:Response, next:NextFunction) => {
+    try {
+        const allSiteNames = await Plot.find().distinct("site");
+
+        res.status(200).json({success:true, message:"All sites name", jsonData:allSiteNames});
     } catch (error) {
         console.log(error);
         next(error);
