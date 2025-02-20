@@ -81,7 +81,7 @@ export const createPlotAndAssign = async(req:Request, res:Response, next:NextFun
         const newPlot = await Plot.create({
             plotNo, size, rate, length, breath,
             site, clientID:newClient._id, duration, hasSold,
-            shouldPay:((size*rate)/duration), paid:amount, agentID,
+            shouldPay:Math.ceil(((size*rate)/duration)), paid:amount, agentID,
             plotStatus:amount < (size*rate) ? "pending" : "completed"
         });
 
@@ -145,7 +145,7 @@ export const assignPlotToClient = async(req:Request, res:Response, next:NextFunc
         
 
         const plotTotalValue = findPlotByID.size*findPlotByID.rate;
-        const emi = plotTotalValue/findPlotByID.duration;
+        const emi = Math.ceil(plotTotalValue/findPlotByID.duration);
 
         findPlotByID.clientID = newClient._id;
         findPlotByID.agentID = agentID;

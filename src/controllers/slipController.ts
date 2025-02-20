@@ -76,7 +76,7 @@ export const createSlip = async(req:Request, res:Response, next:NextFunction) =>
         }).sort({_id:1});
 
         const plotTotalValue = findPlotByID.size*findPlotByID.rate;
-        const emi = (plotTotalValue)/(findPlotByID.duration);
+        const emi = Math.ceil((plotTotalValue)/(findPlotByID.duration));
 
 
         console.log({A: typeof findPlotByID.shouldPay});
