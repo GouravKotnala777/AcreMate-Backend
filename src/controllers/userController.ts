@@ -4,6 +4,7 @@ import { ErrorHandler } from "../utils/utilClasses";
 import { sendToken } from "../utils/utilFunctions";
 import { cookieOptions } from "../utils/utilConstants";
 import { AuthReqTypes } from "../middlewares/auth";
+import Plot from "../models/plotModel";
 
 // Get all users by admin
 export const findAllUsers = async(req:Request, res:Response, next:NextFunction) => {
@@ -25,6 +26,39 @@ export const findAllAgents = async(req:Request, res:Response, next:NextFunction)
         }).select("_id name");
 
         res.status(200).json({success:true, message:"All agents", jsonData:allAgents});
+    } catch (error) {
+        console.log(error);
+        next(error);
+    }
+};
+
+// Get all total sold area of each agents in each site (agents name and their sold area in each site)
+export const agentsAndSoldArea = async(req:Request, res:Response, next:NextFunction) => {
+    try {
+        const plotsGroupByAgent = await Plot.aggregate([
+            {$group:{
+                _id:{agentID:"$agentID", site:"$site"},
+                soldArea:{$sum:"$size"},
+                shouldPay:{$sum:"$shouldPay"},
+                paid:{$sum:"$paid"},
+                pending:{$sum:{$subtract:["$paid", "$shouldPay"]}}
+            }},
+            {$lookup:{
+                from:"users",
+                localField:"_id.agentID",
+                foreignField:"_id",
+                as:"agentInfo"
+            }},
+            {$unwind:"$agentInfo"},
+            {$project:{
+                agentName:"$agentInfo.name",
+                site:"$_id.site",
+                soldArea:1
+            }}
+
+        ]);
+
+        res.status(200).json({success:true, message:"All agents and their sold area", jsonData:plotsGroupByAgent});
     } catch (error) {
         console.log(error);
         next(error);
