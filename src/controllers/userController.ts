@@ -23,7 +23,7 @@ export const findAllAgents = async(req:Request, res:Response, next:NextFunction)
     try {
         const allAgents = await User.find({
             role:"agent"
-        }).select("_id name");
+        });
 
         res.status(200).json({success:true, message:"All agents", jsonData:allAgents});
     } catch (error) {
@@ -64,6 +64,24 @@ export const agentsAndSoldArea = async(req:Request, res:Response, next:NextFunct
         next(error);
     }
 };
+
+
+// Get single agent and single site data (get plots)
+export const agentAndSite = async(req:Request, res:Response, next:NextFunction) => {
+    try {
+        const {agentID, siteName} = req.query;
+
+        const plots = await Plot.find({
+            agentID, site:siteName
+        });
+
+        res.status(200).json({success:true, message:"agentAndSite", jsonData:plots});
+    } catch (error) {
+        console.log(error);
+        next(error);
+    }
+};
+
 
 // Get single user by admin
 export const findSingleUser = async(req:Request, res:Response, next:NextFunction) => {
