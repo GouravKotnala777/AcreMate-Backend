@@ -8,7 +8,9 @@ import { getMonthsCovered } from "../utils/utilFunctions";
 // Get all Slips by admin
 export const findAllSlips = async(req:Request, res:Response, next:NextFunction) => {
     try {
-        const allSlips = await Slip.find();
+        const {skip} = req.query;
+        console.log({skip});
+        const allSlips = await Slip.find().skip(Number(skip)).limit(2);
 
         res.status(200).json({success:true, message:"All slips", jsonData:allSlips});
     } catch (error) {
