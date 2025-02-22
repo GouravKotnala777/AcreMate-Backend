@@ -1,6 +1,7 @@
 import { NextFunction, Request, Response } from "express";
 import Client, { CreateClientBodyTypes } from "../models/clientModel";
 import { ErrorHandler } from "../utils/utilClasses";
+import Slip from "../models/slipModel";
 
 
 // Get all clients by admin
@@ -24,6 +25,23 @@ export const findSingleClient = async(req:Request, res:Response, next:NextFuncti
         const findClientByID = await Client.findById(clientID);
 
         res.status(200).json({success:true, message:"Single client", jsonData:findClientByID});
+    } catch (error) {
+        console.log(error);
+        next(error);
+    }
+};
+// Get single client's all slips by admin
+export const findSingleClientAllSlips = async(req:Request, res:Response, next:NextFunction) => {
+    try {
+        const {clientID} = req.query;
+
+        if (!clientID)return next(new ErrorHandler("clientID not found", 404));
+
+        const slips = await Slip.find({
+            clientID
+        });
+
+        res.status(200).json({success:true, message:"Selected client all slips", jsonData:slips});
     } catch (error) {
         console.log(error);
         next(error);
