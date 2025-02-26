@@ -12,8 +12,6 @@ export const isUserAuthenticated = async(req:Request, _:Response, next:NextFunct
     try {
         const token = req.cookies.userToken || req.headers.cookie?.split(" ")[1];
     
-        console.log({token});
-    
         if (!token) return next(new ErrorHandler("Token not found", 404));
         
         const verifyToken = await jsonWebToken.verify(token, process.env.JWT_SECRET as string) as JwtPayload;
