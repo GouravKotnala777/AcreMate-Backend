@@ -23,7 +23,6 @@ export const findSinglePlot = async(req:Request, res:Response, next:NextFunction
         const {clientID, plotID, slipID, siteID, agentID} = req.query;
 
         if (!clientID && !plotID && !slipID && !siteID && !agentID)return next(new ErrorHandler("singleItemID not found", 404));
-        console.log({clientID, plotID, slipID, siteID, agentID});
         
         let findFirstPayment = null;
         let findLastPayment = null;
@@ -31,8 +30,6 @@ export const findSinglePlot = async(req:Request, res:Response, next:NextFunction
         let findSelectedPlot = null;
 
         if (plotID && plotID !== "null" && plotID !== "undefined") {
-            console.log("Pahle wali line", plotID);
-            
             findSelectedPlot = await Plot.findById(plotID);
             
             if (!findSelectedPlot)return next(new ErrorHandler("Plot not found", 404));
@@ -48,16 +45,12 @@ export const findSinglePlot = async(req:Request, res:Response, next:NextFunction
             findAllPayments = await Slip.find({
                 plotID,
                 clientID:findSelectedPlot.clientID
-            })
+            });
         }
         else if (clientID && clientID !== "null" && clientID !== "undefined") {
-            console.log("Dusri wali line", clientID);
             findSelectedPlot = await Plot.findOne({
                 clientID
-            });
-
-            console.log(findSelectedPlot);
-            
+            });            
 
             if (!findSelectedPlot)return next(new ErrorHandler("Plot not found", 404));
 
@@ -72,10 +65,9 @@ export const findSinglePlot = async(req:Request, res:Response, next:NextFunction
             findAllPayments = await Slip.find({
                 plotID:findSelectedPlot._id,
                 clientID:findSelectedPlot.clientID
-            })
+            });
         }
         else if (slipID && slipID !== "null" && slipID !== "undefined") {
-            console.log("Teesri wali line", slipID);
             const selectedSlip = await Slip.findById(slipID);
             if (!selectedSlip)return next(new ErrorHandler("Slip not found", 404));
             findSelectedPlot = await Plot.findById(selectedSlip.plotID);
@@ -93,14 +85,11 @@ export const findSinglePlot = async(req:Request, res:Response, next:NextFunction
             findAllPayments = await Slip.find({
                 plotID:findSelectedPlot._id,
                 clientID:findSelectedPlot.clientID
-            })
+            });
         }
         else{
             console.log("AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA");
         }
-
-        console.log({findSelectedPlot});
-        
         
         res.status(200).json({success:true, message:"Single plot", jsonData:{singlePlot:findSelectedPlot, firstSlip:findFirstPayment, lastSlip:findLastPayment, allSlips:findAllPayments}});
     } catch (error) {
@@ -120,7 +109,7 @@ export const createPlotAndAssign = async(req:Request, res:Response, next:NextFun
             serialNumber, name, guardian, email, gender, mobile,
 
 
-            slipType, slipNo, modeOfPayment, amount
+            slipType, slipNo, modeOfPayment, paymentID, amount
         
         }:CreatePlotBodyTypes&CreateClientBodyTypes&CreateSlipBodyTypes = req.body;
 
@@ -153,7 +142,7 @@ export const createPlotAndAssign = async(req:Request, res:Response, next:NextFun
         if (!newPlot) return next(new ErrorHandler("Internal server error for newPlot", 500));
         
         const newSlip = await Slip.create({
-            slipType, slipNo, modeOfPayment, amount, agentID, clientID:newClient._id, plotID:newPlot._id
+            slipType, slipNo, modeOfPayment, paymentID, amount, agentID, clientID:newClient._id, plotID:newPlot._id
         })
         
         if (!newSlip) return next(new ErrorHandler("Internal server error for newSlip", 500));
@@ -170,16 +159,10 @@ export const assignPlotToClient = async(req:Request, res:Response, next:NextFunc
     try {
         const {
             plotID, agentID,
-
-
             serialNumber, name, guardian, email, gender, mobile,
-
-
-            slipType, slipNo, modeOfPayment, amount
-        
+            slipType, slipNo, modeOfPayment, paymentID, amount
         }:CreatePlotBodyTypes&CreateClientBodyTypes&CreateSlipBodyTypes = req.body;
 
-        
         const isClientExist = await Client.findOne({
             serialNumber
         });
@@ -191,17 +174,11 @@ export const assignPlotToClient = async(req:Request, res:Response, next:NextFunc
         });
         
         if (!newClient) return next(new ErrorHandler("Internal server error for newClient", 500));
-        
-        console.log({plotID});
-        
+                
         const findPlotByID = await Plot.findById(plotID);
 
-        console.log({findPlotByID});
-        
-        
         if (!findPlotByID) return next(new ErrorHandler("Internal server error for newPlot", 500));
         
-
         const plotTotalValue = findPlotByID.size*findPlotByID.rate;
         const emi = Math.ceil(plotTotalValue/findPlotByID.duration);
 
@@ -218,9 +195,8 @@ export const assignPlotToClient = async(req:Request, res:Response, next:NextFunc
 
         const updatePlot = await findPlotByID.save();
 
-
         const newSlip = await Slip.create({
-            slipType, slipNo, modeOfPayment, amount, agentID, clientID:newClient._id, plotID:updatePlot._id
+            slipType, slipNo, modeOfPayment, paymentID, amount, agentID, clientID:newClient._id, plotID:updatePlot._id
         });
         
         if (!newSlip) return next(new ErrorHandler("Internal server error for newSlip", 500));

@@ -11,12 +11,13 @@ export interface SlipTypes{
     agentID:ObjectId;
     isCancelled:boolean;
     cancelledFor:"bounced"|"cash not received"|"transaction failed";
+    paymentID?:string;
     remark:string;
     createdAt:Date;
     updatedAt:Date;
 };
-export type CreateSlipBodyTypes = Pick<SlipTypes, "slipType"|"slipNo"|"modeOfPayment"|"amount"|"clientID"|"plotID"|"agentID">;
-export type UpdateSlipBodyTypes = Pick<SlipTypes, "slipType"|"slipNo"|"modeOfPayment"|"amount"|"clientID"|"plotID"|"agentID">&{slipID:ObjectId};
+export type CreateSlipBodyTypes = Pick<SlipTypes, "slipType"|"slipNo"|"modeOfPayment"|"paymentID"|"amount"|"clientID"|"plotID"|"agentID">;
+export type UpdateSlipBodyTypes = Partial<Pick<SlipTypes, "slipType"|"isCancelled"|"cancelledFor"|"remark">>&{slipID:ObjectId};
 
 const slipSchema = new mongoose.Schema<SlipTypes>({
     slipType:{
@@ -60,6 +61,10 @@ const slipSchema = new mongoose.Schema<SlipTypes>({
     cancelledFor:{
         type:String,
         enum:["bounced", "cash not received", "transaction failed"],
+        default:null
+    },
+    paymentID:{
+        type:String,
         default:null
     },
     remark:String

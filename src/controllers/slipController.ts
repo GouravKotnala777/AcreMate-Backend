@@ -38,39 +38,22 @@ export const findSingleSlip = async(req:Request, res:Response, next:NextFunction
 // Create slip by admin
 export const createSlip = async(req:Request, res:Response, next:NextFunction) => {
     try {
-        const {slipType, slipNo, modeOfPayment, amount, plotID}:CreateSlipBodyTypes = req.body;
+        const {slipType, slipNo, modeOfPayment, paymentID, amount, plotID}:CreateSlipBodyTypes = req.body;
 
         const isSlipExist = await Slip.findOne({
             slipNo
         });
-
-        console.log("----------------- (1)");
-        
         
         if (isSlipExist) return next(new ErrorHandler("Slip already exist", 409));
-        console.log("----------------- (2)");
         
         const findPlotByID = await Plot.findById(plotID);
-        console.log("----------------- (3)");
         
         if (!plotID) return next(new ErrorHandler("plotID not found", 404));
         if (!findPlotByID) return next(new ErrorHandler("Plot not found", 404));
-        console.log("----------------- (4)");
-        
-        
-        console.log({findPlotByID});
-        console.log("----------------- (5)");
-        
         
         const createSlip = await Slip.create({
-            slipType, slipNo, modeOfPayment, amount, clientID:findPlotByID.clientID, plotID:findPlotByID._id, agentID:findPlotByID.agentID
-        });
-        console.log("----------------- (6)");
-        
-        console.log({createSlip});
-        
-        console.log("----------------- (7)");
-        
+            slipType, slipNo, modeOfPayment, paymentID, amount, clientID:findPlotByID.clientID, plotID:findPlotByID._id, agentID:findPlotByID.agentID
+        });       
 
         const firstPayment = await Slip.findOne({
             plotID:findPlotByID._id,
@@ -80,25 +63,15 @@ export const createSlip = async(req:Request, res:Response, next:NextFunction) =>
         const plotTotalValue = findPlotByID.size*findPlotByID.rate;
         const emi = Math.ceil((plotTotalValue)/(findPlotByID.duration));
 
-
-        console.log({A: typeof findPlotByID.shouldPay});
-        console.log({B: typeof (emi * getMonthsCovered(firstPayment?.createdAt))});
-        console.log({C: typeof emi});
-        console.log({D: typeof getMonthsCovered(firstPayment?.createdAt)});
-        
-
         findPlotByID.shouldPay = Number(emi * getMonthsCovered(firstPayment?.createdAt));
         findPlotByID.paid += Number(amount);
         if (findPlotByID.paid < plotTotalValue) {
-            console.log("----------------- (8)");
             findPlotByID.plotStatus = "pending";
         }
         else{
-            console.log("----------------- (9)");
             findPlotByID.plotStatus = "completed";
         }
         
-        console.log("----------------- (10)");
         const updatePlot = await findPlotByID.save();
 
         res.status(200).json({success:true, message:"Slip created", jsonData:createSlip});
@@ -111,17 +84,38 @@ export const createSlip = async(req:Request, res:Response, next:NextFunction) =>
 // Update slip by admin
 export const updateSlip = async(req:Request, res:Response, next:NextFunction) => {
     try {
-        const {slipID, slipType, slipNo, modeOfPayment, amount, clientID, plotID, agentID}:UpdateSlipBodyTypes = req.body;
+        const {slipID, slipType, isCancelled, cancelledFor, remark}:UpdateSlipBodyTypes = req.body;
+
+        const existingSlip = await Slip.findById(slipID);
+
+        if (!existingSlip) return(next(new ErrorHandler("Slip not found", 404)));
+
+        // Check if isCancelled has changed
+        const isCancelledFiledSame = (existingSlip.isCancelled === isCancelled)&&(isCancelled !== undefined)&&(isCancelled !== null);
 
         const updateSlipByIDandUpdate = await Slip.findByIdAndUpdate(slipID, {
             ...(slipType && {slipType}),
-            ...(slipNo && {slipNo}),
-            ...(modeOfPayment && {modeOfPayment}),
-            ...(amount && {amount}),
-            ...(clientID && {clientID}),
-            ...(plotID && {plotID}),
-            ...(agentID && {agentID})
+            ...(isCancelled !== undefined && isCancelled !== null && !isCancelledFiledSame && {isCancelled}),
+            ...(cancelledFor && {cancelledFor}),
+            ...(remark && {remark})
         }, {new:true});
+
+        if (isCancelled !== undefined && isCancelled !== null && !isCancelledFiledSame) {
+            if (isCancelled === true) {
+                console.log("uuuuuuuuuuuuuuuuuuu", typeof isCancelled, isCancelled);
+                
+                const updatePlot = await Plot.findByIdAndUpdate(existingSlip.plotID, {
+                    $inc:{paid:-(existingSlip.amount)}
+                });
+            }
+            else{
+                console.log("nnnnnnnnnnnnnnnnnnn", typeof isCancelled, isCancelled);
+                const updatePlot = await Plot.findByIdAndUpdate(existingSlip.plotID, {
+                    $inc:{paid:existingSlip.amount}
+                });
+            }
+        }
+
 
         res.status(200).json({success:true, message:"Slip updated", jsonData:updateSlipByIDandUpdate});
     } catch (error) {
