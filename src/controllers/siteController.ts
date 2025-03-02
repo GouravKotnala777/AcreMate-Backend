@@ -1,8 +1,6 @@
 import { NextFunction, Request, Response } from "express";
-import Site, { CreateSiteBodyTypes, SiteTypes } from "../models/siteModel";
+import Site, { CreateSiteBodyTypes, SiteTypes, UpdateSiteBodyTypes } from "../models/siteModel";
 import { ErrorHandler } from "../utils/utilClasses";
-import { ObjectId } from "mongoose";
-import Plot from "../models/plotModel";
 
 
 // Get all Sites by admin
@@ -20,7 +18,7 @@ export const findAllSites = async(req:Request, res:Response, next:NextFunction) 
 // Get all sites name array by admin (site name array only)
 export const findAllSitesName = async(req:Request, res:Response, next:NextFunction) => {
     try {
-        const allSiteNames = await Plot.find().distinct("site");
+        const allSiteNames = await Site.find().distinct("siteName");
 
         res.status(200).json({success:true, message:"All sites name", jsonData:allSiteNames});
     } catch (error) {
@@ -70,11 +68,11 @@ export const createSite = async(req:Request, res:Response, next:NextFunction) =>
 // Update site by admin
 export const updateSite = async(req:Request, res:Response, next:NextFunction) => {
     try {
-        const {siteID, siteName, totalSize}:Partial<CreateSiteBodyTypes>&{siteID:ObjectId} = req.body;
+        const {siteID, totalSize, soldArea}:UpdateSiteBodyTypes = req.body;
 
         const findSiteByIDAndUpdate = await Site.findByIdAndUpdate(siteID, {
-            ...(siteName&&{siteName}),
-            ...(totalSize&&{totalSize})
+            ...(totalSize&&{totalSize}),
+            ...(soldArea&&{soldArea})
         }, {new:true});
         
         if (!findSiteByIDAndUpdate) return next(new ErrorHandler("Internal server error", 500));        
