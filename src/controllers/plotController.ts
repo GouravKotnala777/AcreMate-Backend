@@ -103,7 +103,7 @@ export const findSinglePlot = async(req:Request, res:Response, next:NextFunction
 export const createPlotAndAssign = async(req:Request, res:Response, next:NextFunction) => {
     try {
         const {plotNo, size, rate, length, breath,
-            site, duration, hasSold,
+            site, duration,
             agentID,
 
 
@@ -135,7 +135,7 @@ export const createPlotAndAssign = async(req:Request, res:Response, next:NextFun
 
         const newPlot = await Plot.create({
             plotNo, size, rate, length, breath,
-            site, clientID:newClient._id, duration, hasSold,
+            site, clientID:newClient._id, duration, hasSold:true,
             shouldPay:Math.ceil(((size*rate)/duration)), paid:amount, agentID,
             plotStatus:amount < (size*rate) ? "pending" : "completed"
         });
