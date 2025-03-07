@@ -99,60 +99,49 @@ export const findSinglePlot = async(req:Request, res:Response, next:NextFunction
     }
 };
 
-// Create plot and assign to client with new slip by admin
-export const createPlotAndAssign = async(req:Request, res:Response, next:NextFunction) => {
+// Create new plots by admin
+export const createPlots = async(req:Request, res:Response, next:NextFunction) => {
     try {
         const {plotNo, size, rate, length, breath,
-            site, duration,
-            agentID,
-
-
-            serialNumber, name, guardian, email, gender, mobile,
-
-
-            slipType, slipNo, modeOfPayment, paymentID, amount
+            site, duration, quantity
         
         }:CreatePlotBodyTypes&CreateClientBodyTypes&CreateSlipBodyTypes = req.body;
 
-        const isClientExist = await Client.findOne({
-            serialNumber
-        });
 
-        if (isClientExist) return next(new ErrorHandler("Serial no. is already in use", 409));
-
+        // Check if any plot already exist
         const isPlotExist = await Plot.findOne({
-            plotNo
+            plotNo:{$in:Array.from({length:Number(quantity)}, (_, i) => Number(plotNo)+i)},
+            site
         });
 
-        if (isPlotExist) return next(new ErrorHandler("Plot no. is already in use", 409));
+        if (isPlotExist) return next(new ErrorHandler("One or more plot numbers are already in use", 409));
 
-        const newClient = await Client.create({
-            serialNumber, name, guardian, email, gender, mobile
-        });
+        // Create an array of plot objects
+        //const plotData = Array.from({length:quantity}, (_, i) => ({
+        //    plotNo:Number(plotNo)+i, size, rate, length, breath,
+        //    site, duration, hasSold:false,
+        //    plotStatus:"vacant"
+        //}))
 
-        if (!newClient) return next(new ErrorHandler("Internal server error for newClient", 500));
+        // Create plot in and then push in array
+        const newPlots:PlotTypes[] = [];
+        for(let i=0; i<Number(quantity); i++){
+            const newPlot = await Plot.create({
+                plotNo:Number(plotNo)+i, size, rate, 
+                length, breath, site, duration, 
+                hasSold:false, plotStatus:"vacant", beltRange:[Number(plotNo), Number(plotNo)+Number(quantity)-1]
+            });
 
-
-        const newPlot = await Plot.create({
-            plotNo, size, rate, length, breath,
-            site, clientID:newClient._id, duration, hasSold:true,
-            shouldPay:Math.ceil(((size*rate)/duration)), paid:amount, agentID,
-            plotStatus:amount < (size*rate) ? "pending" : "completed"
-        });
-
-        if (!newPlot) return next(new ErrorHandler("Internal server error for newPlot", 500));
+            newPlots.push(newPlot);
+        }
+        
+        if (newPlots.length === 0) return next(new ErrorHandler("Internal server error for newPlot", 500));
         
         const findSiteByName = await Site.findOneAndUpdate({
             siteName:site
-        }, {$inc:{soldArea:size}}, {new:true});
+        }, {$inc:{soldArea:Number(size)*Number(quantity)}}, {new:true});
 
-        const newSlip = await Slip.create({
-            slipType, slipNo, modeOfPayment, paymentID, amount, agentID, clientID:newClient._id, plotID:newPlot._id
-        })
-        
-        if (!newSlip) return next(new ErrorHandler("Internal server error for newSlip", 500));
-
-        res.status(200).json({success:true, message:"Plot created and assigned", jsonData:newPlot});
+        res.status(200).json({success:true, message:"Plot created and assigned", jsonData:newPlots});
     } catch (error) {
         console.log(error);
         next(error);
@@ -165,7 +154,8 @@ export const assignPlotToClient = async(req:Request, res:Response, next:NextFunc
         const {
             plotID, agentID,
             serialNumber, name, guardian, email, gender, mobile,
-            slipType, slipNo, modeOfPayment, paymentID, amount
+            slipType, slipNo, modeOfPayment, paymentID, amount,
+            size, plotNo
         }:CreatePlotBodyTypes&CreateClientBodyTypes&CreateSlipBodyTypes = req.body;
 
         const isClientExist = await Client.findOne({
@@ -173,25 +163,62 @@ export const assignPlotToClient = async(req:Request, res:Response, next:NextFunc
         });
         
         if (isClientExist) return next(new ErrorHandler("Serial no. is already in use", 409));
-        
+              
+        const findPlotByID = await Plot.findById(plotID);
+
+        if (!findPlotByID) return next(new ErrorHandler("Internal server error for newPlot", 500));
+
+        // find vacant plot for adjust area
+        const vacantPlot = await Plot.findOne({
+            $and:[
+                {plotNo},
+                {plotNo:{
+                    $gte:findPlotByID.beltRange[0],
+                    $lte:findPlotByID.beltRange[1]
+                }}
+            ],
+            site:findPlotByID.site, plotStatus:"vacant", hasSold:false
+        });
+        if (!vacantPlot) return next(new ErrorHandler("Vacant plot (for area adjustment) not found", 404));
+
+        if (vacantPlot.size < Number(size) - findPlotByID.size) return next(new ErrorHandler(`Vacant plot not have enough area`, 409));
+
+        // adjust extra area from vacant plot
+        if (findPlotByID.size < Number(size)) {
+            console.log({realSize:findPlotByID.size, soldSize:size, realType:typeof size, updatedType:Number(size)});
+            console.log(`${findPlotByID.plotNo} ke liye ${vacantPlot.plotNo} se ${(size - findPlotByID.size)} le liya`);
+            
+            vacantPlot.size = vacantPlot.size - (size - findPlotByID.size);
+            await vacantPlot.save();
+        }
+        else if (findPlotByID.size === Number(size)) {
+            console.log("kush nahi hoga");
+        }
+        else{
+            console.log({realSize:findPlotByID.size, soldSize:size, realType:typeof size, updatedType:Number(size)});
+            console.log(`${findPlotByID.plotNo} ko kam kar diya aur ${vacantPlot.plotNo} me ${(findPlotByID.size - size)} add kar diye`);
+            vacantPlot.size = vacantPlot.size + (findPlotByID.size - Number(size));
+            await vacantPlot.save();
+        }
+
+
         const newClient = await Client.create({
             serialNumber, name, guardian, email, gender, mobile
         });
         
         if (!newClient) return next(new ErrorHandler("Internal server error for newClient", 500));
-                
-        const findPlotByID = await Plot.findById(plotID);
 
-        if (!findPlotByID) return next(new ErrorHandler("Internal server error for newPlot", 500));
+
         
-        const plotTotalValue = findPlotByID.size*findPlotByID.rate;
+        const plotTotalValue = Number(size)*findPlotByID.rate;
         const emi = Math.ceil(plotTotalValue/findPlotByID.duration);
 
         findPlotByID.clientID = newClient._id;
         findPlotByID.agentID = agentID;
         findPlotByID.shouldPay = Number(emi);
         findPlotByID.paid = Number(amount);
-        if (findPlotByID.paid < (findPlotByID.size*findPlotByID.rate)) {
+        findPlotByID.size = Number(size);
+        if (findPlotByID.paid < (Number(size)*findPlotByID.rate)) {
             findPlotByID.plotStatus = "pending";
         }
         else{
