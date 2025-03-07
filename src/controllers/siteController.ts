@@ -83,3 +83,29 @@ export const updateSite = async(req:Request, res:Response, next:NextFunction) =>
         next(error);
     }
 };
+
+// Update site rows (plot belts) by admin
+export const updateSiteRows = async(req:Request, res:Response, next:NextFunction) => {
+    try {
+        const {
+            siteID, noOfPlots, lastPlotNo, baseSize
+        }:UpdateSiteBodyTypes = req.body;
+
+        const findSiteByIDAndUpdate = await Site.findByIdAndUpdate(siteID, {
+            $push:{
+                plotsInSingleRow:{
+                    ...(noOfPlots&&{noOfPlots}),
+                    ...(lastPlotNo&&{lastPlotNo}),
+                    ...(baseSize&&{baseSize})
+                }
+            }
+        }, {new:true});
+        
+        if (!findSiteByIDAndUpdate) return next(new ErrorHandler("Internal server error", 500));        
+
+        res.status(200).json({success:true, message:"Site updated", jsonData:findSiteByIDAndUpdate});
+    } catch (error) {
+        console.log(error);
+        next(error);
+    }
+};
