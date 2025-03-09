@@ -109,3 +109,21 @@ export const updateSiteRows = async(req:Request, res:Response, next:NextFunction
         next(error);
     }
 };
+
+// Update site rows (plot belts) by admin
+export const resetSiteRows = async(req:Request, res:Response, next:NextFunction) => {
+    try {
+        const {siteID}:UpdateSiteBodyTypes = req.body;
+
+        const findSiteByIDAndUpdate = await Site.findByIdAndUpdate(siteID, {
+            plotsInSingleRow:[]
+        }, {new:true});
+        
+        if (!findSiteByIDAndUpdate) return next(new ErrorHandler("Internal server error", 500));        
+
+        res.status(200).json({success:true, message:"Site belts has been reset", jsonData:findSiteByIDAndUpdate});
+    } catch (error) {
+        console.log(error);
+        next(error);
+    }
+};
