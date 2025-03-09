@@ -116,13 +116,6 @@ export const createPlots = async(req:Request, res:Response, next:NextFunction) =
 
         if (isPlotExist) return next(new ErrorHandler("One or more plot numbers are already in use", 409));
 
-        // Create an array of plot objects
-        //const plotData = Array.from({length:quantity}, (_, i) => ({
-        //    plotNo:Number(plotNo)+i, size, rate, length, breath,
-        //    site, duration, hasSold:false,
-        //    plotStatus:"vacant"
-        //}))
-
         // Create plot in and then push in array
         const newPlots:PlotTypes[] = [];
         for(let i=0; i<Number(quantity); i++){
@@ -218,6 +211,7 @@ export const assignPlotToClient = async(req:Request, res:Response, next:NextFunc
         findPlotByID.shouldPay = Number(emi);
         findPlotByID.paid = Number(amount);
         findPlotByID.size = Number(size);
+        findPlotByID.hasSold = true;
         if (findPlotByID.paid < (Number(size)*findPlotByID.rate)) {
             findPlotByID.plotStatus = "pending";
         }
