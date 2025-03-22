@@ -4,7 +4,9 @@ import { ErrorHandler } from "../utils/utilClasses";
 import { sendToken } from "../utils/utilFunctions";
 import { cookieOptions } from "../utils/utilConstants";
 import { AuthReqTypes } from "../middlewares/auth";
-import Plot from "../models/plotModel";
+import Plot, { PlotTypes } from "../models/plotModel";
+import Slip, { SlipTypes } from "../models/slipModel";
+import Client, { ClientTypes } from "../models/clientModel";
 
 // Get all users by admin
 export const findAllUsers = async(req:Request, res:Response, next:NextFunction) => {
@@ -12,6 +14,60 @@ export const findAllUsers = async(req:Request, res:Response, next:NextFunction) 
         const allUsers = await User.find();
 
         res.status(200).json({success:true, message:"All users", jsonData:allUsers});
+    } catch (error) {
+        console.log(error);
+        next(error);
+    }
+};
+
+// Get search suggession
+export const getSearchedSuggesstions = async(req:Request, res:Response, next:NextFunction) => {
+    try {
+        const {searchQuery} = req.query;
+        let allClientsOfSearialNo:ClientTypes[] = [];
+        let allPlots:PlotTypes[] = [];
+        let allSlips:SlipTypes[] = [];
+
+        console.log({searchQuery, type:typeof searchQuery});
+        
+
+        if (!searchQuery) return next(new ErrorHandler("searchQuery not found", 404));
+
+        const searchQueryNumber = Number(searchQuery);
+
+        //const allSuggesstions = await User.find();
+        const allClientsOfName = await Client.find({
+            name:{
+                $regex:searchQuery,
+                $options:"i"
+            }
+        });
+        const allClientsOfGuardianName = await Client.find({
+            guardian:{
+                $regex:searchQuery,
+                $options:"i"
+            }
+        });
+
+        if (!isNaN(searchQueryNumber)) {
+            allClientsOfSearialNo = await Client.find({
+                serialNumber:searchQueryNumber
+            });
+            allPlots = await Plot.find({
+                plotNo:searchQueryNumber
+            });
+            allSlips = await Slip.find({
+                slipNo:searchQueryNumber
+            });
+        }
+
+        res.status(200).json({success:true, message:"All users", jsonData:{
+            allClientsOfName,
+            allClientsOfGuardianName,
+            allClientsOfSearialNo,
+            allPlots,
+            allSlips
+        }});
     } catch (error) {
         console.log(error);
         next(error);
