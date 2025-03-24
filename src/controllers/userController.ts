@@ -49,6 +49,22 @@ export const getSearchedSuggesstions = async(req:Request, res:Response, next:Nex
             }
         });
 
+        const allNefts = await Slip.find({
+            modeOfPayment:"transfer",
+            paymentID:{
+                $regex:searchQuery,
+                $options:"i"
+            }
+        });
+
+        const allDrafts = await Slip.find({
+            modeOfPayment:"cheque",
+            paymentID:{
+                $regex:searchQuery,
+                $options:"i"
+            }
+        });
+
         if (!isNaN(searchQueryNumber)) {
             allClientsOfSearialNo = await Client.find({
                 serialNumber:searchQueryNumber
@@ -66,7 +82,9 @@ export const getSearchedSuggesstions = async(req:Request, res:Response, next:Nex
             allClientsOfGuardianName,
             allClientsOfSearialNo,
             allPlots,
-            allSlips
+            allSlips,
+            allNefts,
+            allDrafts
         }});
     } catch (error) {
         console.log(error);
