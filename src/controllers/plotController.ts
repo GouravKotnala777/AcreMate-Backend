@@ -260,24 +260,27 @@ export const detachClientFromPlot = async(req:Request, res:Response, next:NextFu
         const plotTotalValue = findPlotByID.size*findPlotByID.rate;
         const emi = Math.ceil(plotTotalValue/findPlotByID.duration);
 
+
+        const findClientByID = await Client.findById(findPlotByID.clientID);
+
+        if (!findClientByID)  return next(new ErrorHandler("Client not found", 404));
+
         findPlotByID.clientID = null;
         findPlotByID.agentID = null;
         findPlotByID.shouldPay = 0;
         findPlotByID.paid = 0;
         findPlotByID.plotStatus = "vacant";
 
+        findClientByID.ownerShipStatus = "cancelled";
+
         const updatePlot = await findPlotByID.save();
+        const updatedClient = await findClientByID.save();
 
         const findSiteByName = await Site.findOneAndUpdate({
             siteName:findPlotByID.site
         }, {$inc:{soldArea:-(findPlotByID.size)}}, {new:true});
 
-        //const newSlip = await Slip.create({
-        //    slipType, slipNo, modeOfPayment, paymentID, amount, agentID, clientID:newClient._id, plotID:updatePlot._id
-        //});
-        
-        //if (!newSlip) return next(new ErrorHandler("Internal server error for newSlip", 500));
-        
+
         res.status(200).json({success:true, message:"Plot created and assigned", jsonData:updatePlot});
     } catch (error) {
         console.log(error);
