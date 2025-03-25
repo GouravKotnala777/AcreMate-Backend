@@ -99,6 +99,92 @@ export const findSinglePlot = async(req:Request, res:Response, next:NextFunction
     }
 };
 
+// Get all pending client by admin
+export const findPendingClients = async(req:Request, res:Response, next:NextFunction) => {
+    try {
+        const {skip} = req.query;
+        const today = new Date();
+
+        console.log({skip});
+        
+
+        const pendingPlots = await Plot.aggregate([
+            {
+                $addFields:{
+                    timeCovered:{
+                        $ceil:{
+                            $divide:[
+                                {$subtract:[today, "$createdAt"]},
+                                1000 * 60 * 60 * 24 * 30
+                            ]
+                        }
+                    },
+                    pending:{
+                        $subtract:["$paid", {$multiply:["$shouldPay", {
+                                $ceil:{
+                                    $divide:[
+                                        {$subtract:[today, "$createdAt"]},
+                                        1000 * 60 * 60 * 24 * 30
+                                        ]
+                                }
+                            }
+                        ]}]
+                    }
+                }
+            },
+            {
+                $match:{
+                    $expr:{$lt:["$pending", 0]},
+                    plotStatus:"pending"
+                }
+            },
+            {
+                $lookup:{
+                    from:"clients",
+                    as:"clientDetailes",
+                    localField:"clientID",
+                    foreignField:"_id"
+                }
+            },
+            {
+                $unwind:"$clientDetailes"
+            },
+            {
+                $project:{
+                    "clientDetailes._id":1,
+                    "clientDetailes.serialNumber":1,
+                    "clientDetailes.name":1,
+                    "clientDetailes.guardian":1,
+                    "plotNo":1,
+                    "site":1,
+                    "clientDetailes.mobile":1,
+                    "timeCovered":1,
+                    "pending":1
+                }
+            },
+            {$skip:Number(skip)},
+            {$limit:1}
+        ]);
+        
+        if (pendingPlots.length === 0) return next(new ErrorHandler("No more plots", 200))
+
+        const lastSlipIncluded = await Promise.all(
+            pendingPlots.map(async(plt) => ({
+                ...plt, lastSlip:await Slip.findOne({
+                    plotID:plt._id,
+                    clientID:plt.clientDetailes._id,
+                    isCancelled:false
+                }).sort({_id:1}).select("amount createdAt")
+            }))
+        );
+
+        res.status(200).json({success:true, message:"Single client", jsonData:lastSlipIncluded});
+    } catch (error) {
+        console.log(error);
+        next(error);
+    }
+};
+
 // Create new plots by admin
 export const createPlots = async(req:Request, res:Response, next:NextFunction) => {
     try {
