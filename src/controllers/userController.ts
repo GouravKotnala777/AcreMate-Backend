@@ -40,7 +40,8 @@ export const getSearchedSuggesstions = async(req:Request, res:Response, next:Nex
             name:{
                 $regex:searchQuery,
                 $options:"i"
-            }
+            },
+            ownerShipStatus:{$ne:"cancelled"}
         });
         const allClientsOfGuardianName = await Client.find({
             guardian:{
@@ -67,7 +68,8 @@ export const getSearchedSuggesstions = async(req:Request, res:Response, next:Nex
 
         if (!isNaN(searchQueryNumber)) {
             allClientsOfSearialNo = await Client.find({
-                serialNumber:searchQueryNumber
+                serialNumber:searchQueryNumber,
+                ownerShipStatus:{$ne:"cancelled"}
             });
             allPlots = await Plot.find({
                 plotNo:searchQueryNumber
