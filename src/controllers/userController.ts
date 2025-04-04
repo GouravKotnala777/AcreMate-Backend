@@ -129,7 +129,10 @@ export const agentsAndSoldArea = async(req:Request, res:Response, next:NextFunct
             {$project:{
                 agentName:"$agentInfo.name",
                 site:"$_id.site",
-                soldArea:1
+                soldArea:1,
+                shouldPay:1,
+                paid:1,
+                pending:1
             }}
 
         ]);
