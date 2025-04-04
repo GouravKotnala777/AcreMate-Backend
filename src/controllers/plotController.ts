@@ -9,7 +9,11 @@ import Site from "../models/siteModel";
 // Get all plots by admin
 export const findAllPlots = async(req:Request, res:Response, next:NextFunction) => {
     try {
-        const allPlots = await Plot.find();
+        const {siteName} = req.query;
+
+        if (!siteName) return next(new ErrorHandler("siteName not found", 404));
+
+        const allPlots = await Plot.find({site:siteName});
 
         res.status(200).json({success:true, message:"All plots", jsonData:allPlots});
     } catch (error) {
