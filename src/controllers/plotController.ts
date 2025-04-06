@@ -220,9 +220,9 @@ export const createPlots = async(req:Request, res:Response, next:NextFunction) =
         
         if (newPlots.length === 0) return next(new ErrorHandler("Internal server error for newPlot", 500));
         
-        const findSiteByName = await Site.findOneAndUpdate({
-            siteName:site
-        }, {$inc:{soldArea:Number(size)*Number(quantity)}}, {new:true});
+        //const findSiteByName = await Site.findOneAndUpdate({
+        //    siteName:site
+        //}, {$inc:{soldArea:Number(size)*Number(quantity)}}, {new:true});
 
         res.status(200).json({success:true, message:"Plot created and assigned", jsonData:newPlots});
     } catch (error) {
