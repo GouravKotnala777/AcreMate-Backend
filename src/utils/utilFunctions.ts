@@ -4,6 +4,7 @@ import jsonWebToken, { JwtPayload } from "jsonwebtoken";
 import User, { UserTypes } from "../models/userModel";
 import mongoose, { Document, ObjectId } from "mongoose";
 import { cookieOptions } from "./utilConstants";
+import twilio from "twilio";
 
 
 export const sendToken = async(
@@ -19,6 +20,27 @@ export const sendToken = async(
             console.log(error);
             next(error);
         }
+};
+
+export const sendSMS = async(to:string, body:string, next:NextFunction) => {
+    const accountSid = process.env.TWILIO_ACCOUNT_SID;
+    const authToken = process.env.TWILIO_AUTH_TOKEN;
+    const twilioPhone = process.env.TWILIO_PHONE;
+
+    const client = twilio(accountSid, authToken);
+
+    try {
+        const message = client.messages.create({
+            body,
+            from:twilioPhone,
+            to:`+91${to}`
+        });
+        console.log(message);
+        return message;        
+    } catch (error) {
+        console.log(error);
+        next(error);
+    }
 };
 
 export const getMonthsCovered = (createdAt?:Date) => {
