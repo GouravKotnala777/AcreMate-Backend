@@ -170,7 +170,10 @@ export const findPendingClients = async(req:Request, res:Response, next:NextFunc
             {$limit:1}
         ]);
         
-        if (pendingPlots.length === 0) return next(new ErrorHandler("No more plots", 200))
+        if (pendingPlots.length === 0) {
+            res.status(200).json({success:true, message:"No more pendings", jsonData:[]});
+            return;
+        }
 
         const lastSlipIncluded = await Promise.all(
             pendingPlots.map(async(plt) => ({
