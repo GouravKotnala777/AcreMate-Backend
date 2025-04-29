@@ -271,20 +271,31 @@ export const assignPlotToClient = async(req:Request, res:Response, next:NextFunc
 
         // adjust extra area from vacant plot
         if (findPlotByID.size < Number(size)) {
-            console.log({realSize:findPlotByID.size, soldSize:size, realType:typeof size, updatedType:Number(size)});
-            console.log(`${findPlotByID.plotNo} ke liye ${vacantPlot.plotNo} se ${(size - findPlotByID.size)} le liya`);
-            
-            vacantPlot.size = vacantPlot.size - (size - findPlotByID.size);
-            await vacantPlot.save();
+            if (findPlotByID.plotNo !== vacantPlot.plotNo) {
+                vacantPlot.size = vacantPlot.size - (size - findPlotByID.size);
+                await vacantPlot.save();
+                console.log({realSize:findPlotByID.size, soldSize:size, realType:typeof size, updatedType:Number(size)});
+                console.log(`${findPlotByID.plotNo} ke liye ${vacantPlot.plotNo} se ${(size - findPlotByID.size)} le liya`);
+            }
+            else{
+                console.log("adjust kisi or plot se hona chahiye");
+                return next(new ErrorHandler("adjust kisi or plot se hona chahiye", 400));
+            }
         }
         else if (findPlotByID.size === Number(size)) {
             console.log("kush nahi hoga");
         }
         else{
-            console.log({realSize:findPlotByID.size, soldSize:size, realType:typeof size, updatedType:Number(size)});
-            console.log(`${findPlotByID.plotNo} ko kam kar diya aur ${vacantPlot.plotNo} me ${(findPlotByID.size - size)} add kar diye`);
-            vacantPlot.size = vacantPlot.size + (findPlotByID.size - Number(size));
-            await vacantPlot.save();
+            if (findPlotByID.plotNo !== vacantPlot.plotNo) {
+                vacantPlot.size = vacantPlot.size + (findPlotByID.size - Number(size));
+                await vacantPlot.save();
+                console.log({realSize:findPlotByID.size, soldSize:size, realType:typeof size, updatedType:Number(size)});
+                console.log(`${findPlotByID.plotNo} ko kam kar diya aur ${vacantPlot.plotNo} me ${(findPlotByID.size - size)} add kar diye`);
+            }
+            else{
+                console.log("adjust kisi or plot se hona chahiye");
+                return next(new ErrorHandler("adjust kisi or plot se hona chahiye", 400));
+            }
         }
 
 
