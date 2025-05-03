@@ -35,7 +35,9 @@ export const findSinglePlot = async(req:Request, res:Response, next:NextFunction
         let findSelectedPlot = null;
 
         if (plotID && plotID !== "null" && plotID !== "undefined") {
-            findSelectedPlot = await Plot.findById(plotID);
+            findSelectedPlot = await Plot.findById(plotID)
+            .populate({model:"Client", path:"clientID", select:"name"})
+            .populate({model:"User", path:"agentID", select:"name"});
             
             if (!findSelectedPlot)return next(new ErrorHandler("Plot not found", 404));
     
@@ -55,7 +57,9 @@ export const findSinglePlot = async(req:Request, res:Response, next:NextFunction
         else if (clientID && clientID !== "null" && clientID !== "undefined") {
             findSelectedPlot = await Plot.findOne({
                 clientID
-            });            
+            })
+            .populate({model:"Client", path:"clientID", select:"name"})
+            .populate({model:"User", path:"agentID", select:"name"});;            
 
             if (!findSelectedPlot)return next(new ErrorHandler("Plot not found", 404));
 
@@ -75,7 +79,9 @@ export const findSinglePlot = async(req:Request, res:Response, next:NextFunction
         else if (slipID && slipID !== "null" && slipID !== "undefined") {
             const selectedSlip = await Slip.findById(slipID);
             if (!selectedSlip)return next(new ErrorHandler("Slip not found", 404));
-            findSelectedPlot = await Plot.findById(selectedSlip.plotID);
+            findSelectedPlot = await Plot.findById(selectedSlip.plotID)
+            .populate({model:"Client", path:"clientID", select:"name"})
+            .populate({model:"User", path:"agentID", select:"name"});;
 
             if (!findSelectedPlot)return next(new ErrorHandler("Plot not found", 404));
 
