@@ -23,14 +23,14 @@ export const findAllSlips = async(req:Request, res:Response, next:NextFunction) 
 export const findSlipsWithSlipNoRange = async(req:Request, res:Response, next:NextFunction) => {
     try {
         const {fromSlipNo, toSlipNo} = req.query;
-        console.log({fromSlipNo:Number(fromSlipNo), toSlipNo:Number(toSlipNo)});
         const allSlips = await Slip.find({
             slipNo:{
                 $gte:Number(fromSlipNo),
                 $lte:Number(toSlipNo)
             }
         }).populate({model:"Client", path:"clientID", select:"name guardian mobile"})
-        .populate({model:"Plot", path:"plotID", select:"plotNo site"});
+        .populate({model:"Plot", path:"plotID", select:"plotNo site"})
+        .populate({model:"User", path:"agentID", select:"name"});
 
         res.status(200).json({success:true, message:`20 slips from ${fromSlipNo}-${toSlipNo}`, jsonData:allSlips});
     } catch (error) {

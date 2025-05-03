@@ -42,13 +42,13 @@ export const getSearchedSuggesstions = async(req:Request, res:Response, next:Nex
                 $options:"i"
             },
             ownerShipStatus:{$ne:"cancelled"}
-        });
+        }).select("name");
         const allClientsOfGuardianName = await Client.find({
             guardian:{
                 $regex:searchQuery,
                 $options:"i"
             }
-        });
+        }).select("guardian");
 
         const allNefts = await Slip.find({
             modeOfPayment:"transfer",
@@ -56,7 +56,7 @@ export const getSearchedSuggesstions = async(req:Request, res:Response, next:Nex
                 $regex:searchQuery,
                 $options:"i"
             }
-        });
+        }).select("paymentID");
 
         const allDrafts = await Slip.find({
             modeOfPayment:"cheque",
@@ -64,19 +64,19 @@ export const getSearchedSuggesstions = async(req:Request, res:Response, next:Nex
                 $regex:searchQuery,
                 $options:"i"
             }
-        });
+        }).select("paymentID");
 
         if (!isNaN(searchQueryNumber)) {
             allClientsOfSearialNo = await Client.find({
                 serialNumber:searchQueryNumber,
                 ownerShipStatus:{$ne:"cancelled"}
-            });
+            }).select("serialNumber");
             allPlots = await Plot.find({
                 plotNo:searchQueryNumber
-            });
+            }).select("plotNo");
             allSlips = await Slip.find({
                 slipNo:searchQueryNumber
-            });
+            }).select("slipNo");
         }
 
         res.status(200).json({success:true, message:"All users", jsonData:{

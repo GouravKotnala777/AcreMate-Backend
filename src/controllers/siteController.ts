@@ -6,7 +6,7 @@ import { ErrorHandler } from "../utils/utilClasses";
 // Get all Sites by admin
 export const findAllSites = async(req:Request, res:Response, next:NextFunction) => {
     try {
-        const allSites = await Site.find();
+        const allSites = await Site.find().select("siteName soldArea totalSize");
 
         res.status(200).json({success:true, message:"All sites", jsonData:allSites});
     } catch (error) {

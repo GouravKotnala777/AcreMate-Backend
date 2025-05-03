@@ -13,7 +13,7 @@ export const findAllPlots = async(req:Request, res:Response, next:NextFunction) 
 
         if (!siteName) return next(new ErrorHandler("siteName not found", 404));
 
-        const allPlots = await Plot.find({site:siteName});
+        const allPlots = await Plot.find({site:siteName}).select("plotNo size rate plotStatus");
 
         res.status(200).json({success:true, message:"All plots", jsonData:allPlots});
     } catch (error) {
@@ -29,8 +29,6 @@ export const findSinglePlot = async(req:Request, res:Response, next:NextFunction
 
         if (!clientID && !plotID && !slipID && !siteID && !agentID)return next(new ErrorHandler("singleItemID not found", 404));
         
-        let findFirstPayment = null;
-        let findLastPayment = null;
         let findAllPayments = null;
         let findSelectedPlot = null;
 
@@ -41,18 +39,10 @@ export const findSinglePlot = async(req:Request, res:Response, next:NextFunction
             
             if (!findSelectedPlot)return next(new ErrorHandler("Plot not found", 404));
     
-            findFirstPayment = await Slip.findOne({
-                plotID,
-                clientID:findSelectedPlot.clientID
-            }).sort({_id:1});
-            findLastPayment = await Slip.findOne({
-                plotID,
-                clientID:findSelectedPlot.clientID
-            }).sort({_id:-1});
             findAllPayments = await Slip.find({
                 plotID,
                 clientID:findSelectedPlot.clientID
-            });
+            }).select("slipNo slipType amount modeOfPayment paymentID createdAt");
         }
         else if (clientID && clientID !== "null" && clientID !== "undefined") {
             findSelectedPlot = await Plot.findOne({
@@ -63,18 +53,10 @@ export const findSinglePlot = async(req:Request, res:Response, next:NextFunction
 
             if (!findSelectedPlot)return next(new ErrorHandler("Plot not found", 404));
 
-            findFirstPayment = await Slip.findOne({
-                plotID:findSelectedPlot._id,
-                clientID:findSelectedPlot.clientID
-            }).sort({_id:1});
-            findLastPayment = await Slip.findOne({
-                plotID:findSelectedPlot._id,
-                clientID:findSelectedPlot.clientID
-            }).sort({_id:-1});
             findAllPayments = await Slip.find({
                 plotID:findSelectedPlot._id,
                 clientID:findSelectedPlot.clientID
-            });
+            }).select("slipNo slipType amount modeOfPayment paymentID createdAt");
         }
         else if (slipID && slipID !== "null" && slipID !== "undefined") {
             const selectedSlip = await Slip.findById(slipID);
@@ -85,24 +67,16 @@ export const findSinglePlot = async(req:Request, res:Response, next:NextFunction
 
             if (!findSelectedPlot)return next(new ErrorHandler("Plot not found", 404));
 
-            findFirstPayment = await Slip.findOne({
-                plotID:findSelectedPlot._id,
-                clientID:findSelectedPlot.clientID
-            }).sort({_id:1});
-            findLastPayment = await Slip.findOne({
-                plotID:findSelectedPlot._id,
-                clientID:findSelectedPlot.clientID
-            }).sort({_id:-1});
             findAllPayments = await Slip.find({
                 plotID:findSelectedPlot._id,
                 clientID:findSelectedPlot.clientID
-            });
+            }).select("slipNo slipType amount modeOfPayment paymentID createdAt");
         }
         else{
             console.log("AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA");
         }
         
-        res.status(200).json({success:true, message:"Single plot", jsonData:{singlePlot:findSelectedPlot, firstSlip:findFirstPayment, lastSlip:findLastPayment, allSlips:findAllPayments}});
+        res.status(200).json({success:true, message:"Single plot", jsonData:{singlePlot:findSelectedPlot, allSlips:findAllPayments}});
     } catch (error) {
         console.log(error);
         next(error);
