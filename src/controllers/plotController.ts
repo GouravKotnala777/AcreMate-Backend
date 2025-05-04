@@ -13,7 +13,7 @@ export const findAllPlots = async(req:Request, res:Response, next:NextFunction) 
 
         if (!siteName) return next(new ErrorHandler("siteName not found", 404));
 
-        const allPlots = await Plot.find({site:siteName}).select("plotNo size rate plotStatus");
+        const allPlots = await Plot.find({site:siteName}).select("plotNo size rate plotStatus hasSold shouldPay paid");
 
         res.status(200).json({success:true, message:"All plots", jsonData:allPlots});
     } catch (error) {
