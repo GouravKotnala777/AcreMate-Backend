@@ -6,48 +6,48 @@ import { sendSMS } from "../utils/utilFunctions";
 
 
 // Get all clients by admin
-export const findAllClients = async(req:Request, res:Response, next:NextFunction) => {
-    try {
-        const allClients = await Client.find();
+//export const findAllClients = async(req:Request, res:Response, next:NextFunction) => {
+//    try {
+//        const allClients = await Client.find();
 
-        res.status(200).json({success:true, message:"All clients", jsonData:allClients});
-    } catch (error) {
-        console.log(error);
-        next(error);
-    }
-};
+//        res.status(200).json({success:true, message:"All clients", jsonData:allClients});
+//    } catch (error) {
+//        console.log(error);
+//        next(error);
+//    }
+//};
 // Get single client by admin
-export const findSingleClient = async(req:Request, res:Response, next:NextFunction) => {
-    try {
-        const {clientID} = req.query;
+//export const findSingleClient = async(req:Request, res:Response, next:NextFunction) => {
+//    try {
+//        const {clientID} = req.query;
 
-        if (!clientID)return next(new ErrorHandler("clientID not found", 404));
+//        if (!clientID)return next(new ErrorHandler("clientID not found", 404));
 
-        const findClientByID = await Client.findById(clientID);
+//        const findClientByID = await Client.findById(clientID);
 
-        res.status(200).json({success:true, message:"Single client", jsonData:findClientByID});
-    } catch (error) {
-        console.log(error);
-        next(error);
-    }
-};
+//        res.status(200).json({success:true, message:"Single client", jsonData:findClientByID});
+//    } catch (error) {
+//        console.log(error);
+//        next(error);
+//    }
+//};
 // Get single client's all slips by admin
-export const findSingleClientAllSlips = async(req:Request, res:Response, next:NextFunction) => {
-    try {
-        const {clientID} = req.query;
+//export const findSingleClientAllSlips = async(req:Request, res:Response, next:NextFunction) => {
+//    try {
+//        const {clientID} = req.query;
 
-        if (!clientID)return next(new ErrorHandler("clientID not found", 404));
+//        if (!clientID)return next(new ErrorHandler("clientID not found", 404));
 
-        const slips = await Slip.find({
-            clientID
-        });
+//        const slips = await Slip.find({
+//            clientID
+//        });
 
-        res.status(200).json({success:true, message:"Selected client all slips", jsonData:slips});
-    } catch (error) {
-        console.log(error);
-        next(error);
-    }
-};
+//        res.status(200).json({success:true, message:"Selected client all slips", jsonData:slips});
+//    } catch (error) {
+//        console.log(error);
+//        next(error);
+//    }
+//};
 // Create new client by admin
 export const createClient = async(req:Request, res:Response, next:NextFunction) => {
     try {
@@ -88,17 +88,17 @@ export const sendMessageToClient = async(req:Request, res:Response, next:NextFun
     }
 };
 // Cancel client by admin
-export const cancelClent = async(req:Request, res:Response, next:NextFunction) => {
-    try {
-        const {clientID} = req.body;
+//export const cancelClent = async(req:Request, res:Response, next:NextFunction) => {
+//    try {
+//        const {clientID} = req.body;
 
-        const removClient = await Client.findByIdAndUpdate(clientID, {
-            ownerShipStatus:"cancelled"
-        }, {new:true});
+//        const removClient = await Client.findByIdAndUpdate(clientID, {
+//            ownerShipStatus:"cancelled"
+//        }, {new:true});
 
-        res.status(200).json({success:true, message:"Client cancelled", jsonData:removClient});
-    } catch (error) {
-        console.log(error);
-        next(error);
-    }
-};
+//        res.status(200).json({success:true, message:"Client cancelled", jsonData:removClient});
+//    } catch (error) {
+//        console.log(error);
+//        next(error);
+//    }
+//};
