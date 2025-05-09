@@ -1,5 +1,9 @@
 import mongoose, { Model, ObjectId } from "mongoose";
 
+export interface CoordinatesTypes{
+    x:number;
+    y:number;
+};
 export interface PlotTypes{
     _id:ObjectId;
     plotNo:number;
@@ -14,10 +18,10 @@ export interface PlotTypes{
     shouldPay:number;
     paid:number;
     agentID:ObjectId|null;
-    beltRange:number[];
     plotStatus:"pending"|"completed"|"registered"|"vacant";
     createdAt:Date;
     updatedAt:Date;
+    coordinates:CoordinatesTypes;
 };
 
 export type CreatePlotBodyTypes = Pick<PlotTypes, "plotNo"|"size"|"rate"|"site"|"duration"|"length"|"breath">&Partial<Pick<PlotTypes, "plotStatus"|"clientID"|"hasSold"|"agentID"|"paid"|"shouldPay"|"updatedAt"|"createdAt">>&{quantity:number};
@@ -76,9 +80,10 @@ const plotSchema = new mongoose.Schema<PlotTypes>({
         enum:["pending", "completed", "registered", "vacant"],
         default:"vacant"
     },
-    beltRange:[{
-        type:Number
-    }]
+    coordinates:{
+        x:Number,
+        y:Number
+    }
 }, {timestamps:true});
 
 const plotModel:Model<PlotTypes> = mongoose.models.Plot || mongoose.model<PlotTypes>("Plot", plotSchema);
