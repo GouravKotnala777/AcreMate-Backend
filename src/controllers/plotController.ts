@@ -13,7 +13,7 @@ export const findAllPlots = async(req:Request, res:Response, next:NextFunction) 
 
         if (!siteName) return next(new ErrorHandler("siteName not found", 404));
 
-        const allPlots = await Plot.find({site:siteName}).select("plotNo size rate plotStatus hasSold shouldPay paid");
+        const allPlots = await Plot.find({site:siteName}).select("plotNo size rate plotStatus hasSold shouldPay paid coordinates length breath");
 
         res.status(200).json({success:true, message:"All plots", jsonData:allPlots});
     } catch (error) {
@@ -175,10 +175,11 @@ export const findPendingClients = async(req:Request, res:Response, next:NextFunc
 // Create new plots by admin
 export const createPlots = async(req:Request, res:Response, next:NextFunction) => {
     try {
-        const {plotNo, size, rate, length, breath,
-            site, duration, quantity
+        const {plotsCoordArr, plotNo, size, rate, length, breath,
+            site, duration, quantity,
+            x, y
         
-        }:CreatePlotBodyTypes&CreateClientBodyTypes&CreateSlipBodyTypes = req.body;
+        }:CreatePlotBodyTypes&CreateClientBodyTypes&CreateSlipBodyTypes&{plotsCoordArr:{baseSize:number; plotNo:number; x:number; y:number;}[]}&{x:number; y:number;} = req.body;
 
 
         // Check if any plot already exist
@@ -189,25 +190,18 @@ export const createPlots = async(req:Request, res:Response, next:NextFunction) =
 
         if (isPlotExist) return next(new ErrorHandler("One or more plot numbers are already in use", 409));
 
-        // Create plot in and then push in array
-        const newPlots:PlotTypes[] = [];
-        for(let i=0; i<Number(quantity); i++){
-            const newPlot = await Plot.create({
-                plotNo:Number(plotNo)+i, size, rate, 
-                length, breath, site, duration, 
-                hasSold:false, plotStatus:"vacant", beltRange:[Number(plotNo), Number(plotNo)+Number(quantity)-1]
-            });
+        const newPlot = await Plot.create({
+            plotNo:Number(plotNo), size, rate, 
+            length, breath, site, duration, 
+            hasSold:false, 
+            plotStatus:"vacant", 
+            //beltRange:[Number(plotNo), Number(plotNo)+Number(quantity)-1],
+            coordinates:{x, y}
+        });
+        //for(let i=1; i<=plotsCoordArr.length; i++){
+        //}
 
-            newPlots.push(newPlot);
-        }
-        
-        if (newPlots.length === 0) return next(new ErrorHandler("Internal server error for newPlot", 500));
-        
-        //const findSiteByName = await Site.findOneAndUpdate({
-        //    siteName:site
-        //}, {$inc:{soldArea:Number(size)*Number(quantity)}}, {new:true});
-
-        res.status(200).json({success:true, message:"Plot created and assigned", jsonData:newPlots});
+        res.status(200).json({success:true, message:"Plot created and assigned", jsonData:newPlot});
     } catch (error) {
         console.log(error);
         next(error);
@@ -221,7 +215,7 @@ export const assignPlotToClient = async(req:Request, res:Response, next:NextFunc
             plotID, agentID,
             serialNumber, name, guardian, email, gender, mobile,
             slipType, slipNo, modeOfPayment, paymentID, amount,
-            size, plotNo
+            size, plotNo, length, breath
         }:CreatePlotBodyTypes&CreateClientBodyTypes&CreateSlipBodyTypes = req.body;
 
         const isClientExist = await Client.findOne({
@@ -237,11 +231,7 @@ export const assignPlotToClient = async(req:Request, res:Response, next:NextFunc
         // find vacant plot for adjust area
         const vacantPlot = await Plot.findOne({
             $and:[
-                {plotNo},
-                {plotNo:{
-                    $gte:findPlotByID.beltRange[0],
-                    $lte:findPlotByID.beltRange[1]
-                }}
+                {plotNo}
             ],
             site:findPlotByID.site, plotStatus:"vacant", hasSold:false
         });
@@ -296,6 +286,8 @@ export const assignPlotToClient = async(req:Request, res:Response, next:NextFunc
         findPlotByID.paid = Number(amount);
         findPlotByID.size = Number(size);
         findPlotByID.hasSold = true;
+        findPlotByID.length = Number(length);
+        findPlotByID.breath = Number(breath);
         if (findPlotByID.paid < (Number(size)*findPlotByID.rate)) {
             findPlotByID.plotStatus = "pending";
         }
@@ -372,36 +364,23 @@ export const detachClientFromPlot = async(req:Request, res:Response, next:NextFu
     }
 };
 
-// Update plot by admin
-//export const updatePlot = async(req:Request, res:Response, next:NextFunction) => {
-//    try {
-//        const {plotID, plotNo, size, rate, length, breath, 
-//            clientID, duration, hasSold,
-//            shouldPay, paid, agentID, plotStatus}:UpdatePlotBodyTypes = req.body;
+// Update plot coordinates by admin
+export const updatePlotCoordinates = async(req:Request, res:Response, next:NextFunction) => {
+    try {
+        const {plotID, x, y}:{plotID:string; x:number; y:number;} = req.body;
 
-//        const findPlotByIDAndUpdate = await Plot.findByIdAndUpdate(plotID, {
-//            ...(plotNo&&{plotNo}),
-//            ...(size&&{size}),
-//            ...(rate&&{rate}),
-//            ...(length&&{length}),
-//            ...(breath&&{breath}),
-//            ...(clientID&&{clientID}),
-//            ...(duration&&{duration}),
-//            ...(hasSold&&{hasSold}),
-//            ...(shouldPay&&{shouldPay}),
-//            ...(paid&&{paid}),
-//            ...(agentID&&{agentID}),
-//            ...(plotStatus&&{plotStatus})
-//        }, {new:true});
+        const findPlotByIDAndUpdate = await Plot.findByIdAndUpdate(plotID, {
+            coordinates:{x, y}
+        }, {new:true});
 
-//        if (!findPlotByIDAndUpdate) return next(new ErrorHandler("Internal server error", 500));
+        if (!findPlotByIDAndUpdate) return next(new ErrorHandler("Internal server error", 500));
 
-//        res.status(200).json({success:true, message:"Plot updated", jsonData:findPlotByIDAndUpdate});
-//    } catch (error) {
-//        console.log(error);
-//        next(error);
-//    }
-//};
+        res.status(200).json({success:true, message:"Plot updated", jsonData:findPlotByIDAndUpdate});
+    } catch (error) {
+        console.log(error);
+        next(error);
+    }
+};
 
 // Delete plot by admin
 //export const deletePlot = async(req:Request, res:Response, next:NextFunction) => {
