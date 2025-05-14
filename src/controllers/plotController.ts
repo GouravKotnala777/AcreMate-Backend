@@ -243,6 +243,18 @@ export const assignPlotToClient = async(req:Request, res:Response, next:NextFunc
         if (findPlotByID.size < Number(size)) {
             if (findPlotByID.plotNo !== vacantPlot.plotNo) {
                 vacantPlot.size = vacantPlot.size - (size - findPlotByID.size);
+                if (findPlotByID.length < length) {
+                    vacantPlot.length = vacantPlot.length - (length - findPlotByID.length);
+                }
+                else if (findPlotByID.breath < breath) {
+                    vacantPlot.breath = vacantPlot.breath - (breath - findPlotByID.breath);
+                    for(let pltNo=findPlotByID.plotNo+1; pltNo<=plotNo; pltNo++){
+                        await Plot.findOneAndUpdate({plotNo:pltNo, site:findPlotByID.site}, {$inc:{"coordinates.x":(Number(breath) - Number(findPlotByID.breath))*3}})
+                    }
+                }
+                else{
+                    console.log("na to length badhani hai na hi breath from upper part");
+                }
                 await vacantPlot.save();
                 console.log({realSize:findPlotByID.size, soldSize:size, realType:typeof size, updatedType:Number(size)});
                 console.log(`${findPlotByID.plotNo} ke liye ${vacantPlot.plotNo} se ${(size - findPlotByID.size)} le liya`);
@@ -258,6 +270,18 @@ export const assignPlotToClient = async(req:Request, res:Response, next:NextFunc
         else{
             if (findPlotByID.plotNo !== vacantPlot.plotNo) {
                 vacantPlot.size = vacantPlot.size + (findPlotByID.size - Number(size));
+                if (findPlotByID.length > length) {
+                    vacantPlot.length = vacantPlot.length + (findPlotByID.length - length);
+                }
+                else if (findPlotByID.breath > breath) {
+                    vacantPlot.breath = vacantPlot.breath + (findPlotByID.breath - breath);
+                    for(let pltNo=findPlotByID.plotNo+1; pltNo<=plotNo; pltNo++){
+                        await Plot.findOneAndUpdate({plotNo:pltNo, site:findPlotByID.site}, {$inc:{"coordinates.x":(Number(breath) - Number(findPlotByID.breath))*3}})
+                    }
+                }
+                else{
+                    console.log("na to length ghatani hai na hi breath from lower part");
+                }
                 await vacantPlot.save();
                 console.log({realSize:findPlotByID.size, soldSize:size, realType:typeof size, updatedType:Number(size)});
                 console.log(`${findPlotByID.plotNo} ko kam kar diya aur ${vacantPlot.plotNo} me ${(findPlotByID.size - size)} add kar diye`);
@@ -300,6 +324,8 @@ export const assignPlotToClient = async(req:Request, res:Response, next:NextFunc
         const newSlip = await Slip.create({
             slipType, slipNo, modeOfPayment, paymentID, amount, agentID, clientID:newClient._id, plotID:updatePlot._id
         });
+
+        const updateSite = await Site.findOneAndUpdate({siteName:updatePlot.site}, {$inc:{soldArea:size}});
         
         if (!newSlip) return next(new ErrorHandler("Internal server error for newSlip", 500));
         
