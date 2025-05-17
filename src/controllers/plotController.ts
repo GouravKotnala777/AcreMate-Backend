@@ -229,66 +229,68 @@ export const assignPlotToClient = async(req:Request, res:Response, next:NextFunc
         if (!findPlotByID) return next(new ErrorHandler("Internal server error for newPlot", 500));
 
         // find vacant plot for adjust area
-        const vacantPlot = await Plot.findOne({
-            $and:[
-                {plotNo}
-            ],
-            site:findPlotByID.site, plotStatus:"vacant", hasSold:false
-        });
-        if (!vacantPlot) return next(new ErrorHandler("Vacant plot (for area adjustment) not found", 404));
-
-        if (vacantPlot.size < Number(size) - findPlotByID.size) return next(new ErrorHandler(`Vacant plot not have enough area`, 409));
-
-        // adjust extra area from vacant plot
-        if (findPlotByID.size < Number(size)) {
-            if (findPlotByID.plotNo !== vacantPlot.plotNo) {
-                vacantPlot.size = vacantPlot.size - (size - findPlotByID.size);
-                if (findPlotByID.length < length) {
-                    vacantPlot.length = vacantPlot.length - (length - findPlotByID.length);
-                }
-                else if (findPlotByID.breath < breath) {
-                    vacantPlot.breath = vacantPlot.breath - (breath - findPlotByID.breath);
-                    for(let pltNo=findPlotByID.plotNo+1; pltNo<=plotNo; pltNo++){
-                        await Plot.findOneAndUpdate({plotNo:pltNo, site:findPlotByID.site}, {$inc:{"coordinates.x":(Number(breath) - Number(findPlotByID.breath))*3}})
+        if (plotNo) {
+            const vacantPlot = await Plot.findOne({
+                $and:[
+                    {plotNo}
+                ],
+                site:findPlotByID.site, plotStatus:"vacant", hasSold:false
+            });
+            if (!vacantPlot) return next(new ErrorHandler("Vacant plot (for area adjustment) not found", 404));
+    
+            if (vacantPlot.size < Number(size) - findPlotByID.size) return next(new ErrorHandler(`Vacant plot not have enough area`, 409));
+    
+            // adjust extra area from vacant plot
+            if (findPlotByID.size < Number(size)) {
+                if (findPlotByID.plotNo !== vacantPlot.plotNo) {
+                    vacantPlot.size = vacantPlot.size - (size - findPlotByID.size);
+                    if (findPlotByID.length < length) {
+                        vacantPlot.length = vacantPlot.length - (length - findPlotByID.length);
                     }
+                    else if (findPlotByID.breath < breath) {
+                        vacantPlot.breath = vacantPlot.breath - (breath - findPlotByID.breath);
+                        for(let pltNo=findPlotByID.plotNo+1; pltNo<=plotNo; pltNo++){
+                            await Plot.findOneAndUpdate({plotNo:pltNo, site:findPlotByID.site}, {$inc:{"coordinates.x":(Number(breath) - Number(findPlotByID.breath))*3}})
+                        }
+                    }
+                    else{
+                        console.log("na to length badhani hai na hi breath from upper part");
+                    }
+                    await vacantPlot.save();
+                    console.log({realSize:findPlotByID.size, soldSize:size, realType:typeof size, updatedType:Number(size)});
+                    console.log(`${findPlotByID.plotNo} ke liye ${vacantPlot.plotNo} se ${(size - findPlotByID.size)} le liya`);
                 }
                 else{
-                    console.log("na to length badhani hai na hi breath from upper part");
+                    console.log("adjust kisi or plot se hona chahiye");
+                    return next(new ErrorHandler("adjust kisi or plot se hona chahiye", 400));
                 }
-                await vacantPlot.save();
-                console.log({realSize:findPlotByID.size, soldSize:size, realType:typeof size, updatedType:Number(size)});
-                console.log(`${findPlotByID.plotNo} ke liye ${vacantPlot.plotNo} se ${(size - findPlotByID.size)} le liya`);
+            }
+            else if (findPlotByID.size === Number(size)) {
+                console.log("kush nahi hoga");
             }
             else{
-                console.log("adjust kisi or plot se hona chahiye");
-                return next(new ErrorHandler("adjust kisi or plot se hona chahiye", 400));
-            }
-        }
-        else if (findPlotByID.size === Number(size)) {
-            console.log("kush nahi hoga");
-        }
-        else{
-            if (findPlotByID.plotNo !== vacantPlot.plotNo) {
-                vacantPlot.size = vacantPlot.size + (findPlotByID.size - Number(size));
-                if (findPlotByID.length > length) {
-                    vacantPlot.length = vacantPlot.length + (findPlotByID.length - length);
-                }
-                else if (findPlotByID.breath > breath) {
-                    vacantPlot.breath = vacantPlot.breath + (findPlotByID.breath - breath);
-                    for(let pltNo=findPlotByID.plotNo+1; pltNo<=plotNo; pltNo++){
-                        await Plot.findOneAndUpdate({plotNo:pltNo, site:findPlotByID.site}, {$inc:{"coordinates.x":(Number(breath) - Number(findPlotByID.breath))*3}})
+                if (findPlotByID.plotNo !== vacantPlot.plotNo) {
+                    vacantPlot.size = vacantPlot.size + (findPlotByID.size - Number(size));
+                    if (findPlotByID.length > length) {
+                        vacantPlot.length = vacantPlot.length + (findPlotByID.length - length);
                     }
+                    else if (findPlotByID.breath > breath) {
+                        vacantPlot.breath = vacantPlot.breath + (findPlotByID.breath - breath);
+                        for(let pltNo=findPlotByID.plotNo+1; pltNo<=plotNo; pltNo++){
+                            await Plot.findOneAndUpdate({plotNo:pltNo, site:findPlotByID.site}, {$inc:{"coordinates.x":(Number(breath) - Number(findPlotByID.breath))*3}})
+                        }
+                    }
+                    else{
+                        console.log("na to length ghatani hai na hi breath from lower part");
+                    }
+                    await vacantPlot.save();
+                    console.log({realSize:findPlotByID.size, soldSize:size, realType:typeof size, updatedType:Number(size)});
+                    console.log(`${findPlotByID.plotNo} ko kam kar diya aur ${vacantPlot.plotNo} me ${(findPlotByID.size - size)} add kar diye`);
                 }
                 else{
-                    console.log("na to length ghatani hai na hi breath from lower part");
+                    console.log("adjust kisi or plot se hona chahiye");
+                    return next(new ErrorHandler("adjust kisi or plot se hona chahiye", 400));
                 }
-                await vacantPlot.save();
-                console.log({realSize:findPlotByID.size, soldSize:size, realType:typeof size, updatedType:Number(size)});
-                console.log(`${findPlotByID.plotNo} ko kam kar diya aur ${vacantPlot.plotNo} me ${(findPlotByID.size - size)} add kar diye`);
-            }
-            else{
-                console.log("adjust kisi or plot se hona chahiye");
-                return next(new ErrorHandler("adjust kisi or plot se hona chahiye", 400));
             }
         }
 
