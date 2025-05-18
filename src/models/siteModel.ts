@@ -21,7 +21,10 @@ const siteSchema = new mongoose.Schema<SiteTypes>({
         lowercase:true,
         required:true
     },
-    totalSize:Number,
+    totalSize:{
+        type:Number,
+        required:true
+    },
     soldArea:{
         type:Number,
         default:0

@@ -321,15 +321,23 @@ export const assignPlotToClient = async(req:Request, res:Response, next:NextFunc
             findPlotByID.plotStatus = "completed";
         }
 
-        const updatePlot = await findPlotByID.save();
+        //const updatePlot = await findPlotByID.save();
+        let updatePlot = null;
+        try {
+            const newSlip = await Slip.create({
+                slipType, slipNo, modeOfPayment, paymentID, amount, agentID, clientID:newClient._id, plotID:findPlotByID._id
+            });
+    
+            updatePlot = await findPlotByID.save();
+            const updateSite = await Site.findOneAndUpdate({siteName:findPlotByID.site}, {$inc:{soldArea:size}});
+            
+            if (!newSlip) return next(new ErrorHandler("Internal server error for newSlip", 500));
+            
+        } catch (error) {
+            await Client.findByIdAndDelete(newClient._id);
+            throw error;
+        }
 
-        const newSlip = await Slip.create({
-            slipType, slipNo, modeOfPayment, paymentID, amount, agentID, clientID:newClient._id, plotID:updatePlot._id
-        });
-
-        const updateSite = await Site.findOneAndUpdate({siteName:updatePlot.site}, {$inc:{soldArea:size}});
-        
-        if (!newSlip) return next(new ErrorHandler("Internal server error for newSlip", 500));
         
         res.status(200).json({success:true, message:"Plot created and assigned", jsonData:updatePlot});
     } catch (error) {
