@@ -49,26 +49,26 @@ import { sendSMS } from "../utils/utilFunctions";
 //    }
 //};
 // Create new client by admin
-export const createClient = async(req:Request, res:Response, next:NextFunction) => {
-    try {
-        const {serialNumber, name, guardian, email, gender, mobile}:CreateClientBodyTypes = req.body;
+//export const createClient = async(req:Request, res:Response, next:NextFunction) => {
+//    try {
+//        const {serialNumber, name, guardian, email, gender, mobile}:CreateClientBodyTypes = req.body;
 
-        const isClientExist = await Client.findOne({
-            serialNumber
-        });
+//        const isClientExist = await Client.findOne({
+//            serialNumber
+//        });
 
-        if (isClientExist) return next(new ErrorHandler("Serial no. is already in use", 409));
+//        if (isClientExist) return next(new ErrorHandler("Serial no. is already in use", 409));
 
-        const newClient = await Client.create({
-            serialNumber, name, guardian, email, gender, mobile
-        });
+//        const newClient = await Client.create({
+//            serialNumber, name, guardian, email, gender, mobile
+//        });
 
-        res.status(200).json({success:true, message:"Client created", jsonData:newClient});
-    } catch (error) {
-        console.log(error);
-        next(error);
-    }
-};
+//        res.status(200).json({success:true, message:"Client created", jsonData:newClient});
+//    } catch (error) {
+//        console.log(error);
+//        next(error);
+//    }
+//};
 export const sendMessageToClient = async(req:Request, res:Response, next:NextFunction) => {
     try {
         const {to, message} = req.body;
