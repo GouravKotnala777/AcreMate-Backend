@@ -418,18 +418,22 @@ export const updatePlotCoordinates = async(req:Request, res:Response, next:NextF
 };
 
 // Delete plot by admin
-//export const deletePlot = async(req:Request, res:Response, next:NextFunction) => {
-//    try {
-//        const {plotID}:{plotID:ObjectId} = req.body;
+export const deletePlot = async(req:Request, res:Response, next:NextFunction) => {
+    try {
+        const {plotID}:{plotID:ObjectId} = req.body;
 
-//        const findPlotByIDAndDelete = await Plot.findByIdAndDelete(plotID);
+        const findPlotByIDAndDelete = await Plot.findByIdAndDelete(plotID);
+        
+        if (!findPlotByIDAndDelete) return next(new ErrorHandler("Plot not exist", 404));
+        
+        await Site.findOneAndUpdate({
+            siteName:findPlotByIDAndDelete.site
+        }, {$inc:{soldArea:-(findPlotByIDAndDelete.size)}});
 
-//        if (!findPlotByIDAndDelete) return next(new ErrorHandler("Plot not exist", 404));
-
-//        res.status(200).json({success:true, message:"Plot deleted", jsonData:findPlotByIDAndDelete});
-//    } catch (error) {
-//        console.log(error);
-//        next(error);
-//    }
-//};
+        res.status(200).json({success:true, message:"Plot deleted", jsonData:findPlotByIDAndDelete});
+    } catch (error) {
+        console.log(error);
+        next(error);
+    }
+};
 
