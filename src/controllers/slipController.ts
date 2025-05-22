@@ -5,20 +5,6 @@ import Plot from "../models/plotModel";
 import { getMonthsCovered } from "../utils/utilFunctions";
 
 
-// Get all Slips by admin
-//export const findAllSlips = async(req:Request, res:Response, next:NextFunction) => {
-//    try {
-//        const {skip} = req.query;
-//        console.log({skip});
-//        const allSlips = await Slip.find().skip(Number(skip)).limit(2);
-
-//        res.status(200).json({success:true, message:"All slips", jsonData:allSlips});
-//    } catch (error) {
-//        console.log(error);
-//        next(error);
-//    }
-//};
-
 // Get 20 slips with slip numbers by admin
 export const findSlipsWithSlipNoRange = async(req:Request, res:Response, next:NextFunction) => {
     try {
@@ -38,22 +24,6 @@ export const findSlipsWithSlipNoRange = async(req:Request, res:Response, next:Ne
         next(error);
     }
 };
-
-// Get single slip by admin
-//export const findSingleSlip = async(req:Request, res:Response, next:NextFunction) => {
-//    try {
-//        const {slipID} = req.query;
-
-//        if (!slipID)return next(new ErrorHandler("slipID not found", 404));
-
-//        const findSlipByID = await Slip.findById(slipID);
-
-//        res.status(200).json({success:true, message:"Single slip", jsonData:findSlipByID});
-//    } catch (error) {
-//        console.log(error);
-//        next(error);
-//    }
-//};
 
 // Create slip by admin
 export const createSlip = async(req:Request, res:Response, next:NextFunction) => {

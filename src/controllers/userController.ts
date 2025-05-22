@@ -8,18 +8,6 @@ import Plot, { PlotTypes } from "../models/plotModel";
 import Slip, { SlipTypes } from "../models/slipModel";
 import Client, { ClientTypes } from "../models/clientModel";
 
-// Get all users by admin
-//export const findAllUsers = async(req:Request, res:Response, next:NextFunction) => {
-//    try {
-//        const allUsers = await User.find();
-
-//        res.status(200).json({success:true, message:"All users", jsonData:allUsers});
-//    } catch (error) {
-//        console.log(error);
-//        next(error);
-//    }
-//};
-
 // Get search suggession
 export const getSearchedSuggesstions = async(req:Request, res:Response, next:NextFunction) => {
     try {
@@ -143,40 +131,6 @@ export const agentsAndSoldArea = async(req:Request, res:Response, next:NextFunct
         next(error);
     }
 };
-
-
-// Get single agent and single site data (get plots)
-//export const agentAndSite = async(req:Request, res:Response, next:NextFunction) => {
-//    try {
-//        const {agentID, siteName} = req.query;
-
-//        const plots = await Plot.find({
-//            agentID, site:siteName
-//        });
-
-//        res.status(200).json({success:true, message:"agentAndSite", jsonData:plots});
-//    } catch (error) {
-//        console.log(error);
-//        next(error);
-//    }
-//};
-
-
-// Get single user by admin
-//export const findSingleUser = async(req:Request, res:Response, next:NextFunction) => {
-//    try {
-//        const {userID} = req.query;
-
-//        if (!userID)return next(new ErrorHandler("userID not found", 404));
-
-//        const findUserByID = await User.findById(userID);
-
-//        res.status(200).json({success:true, message:"Single user", jsonData:findUserByID});
-//    } catch (error) {
-//        console.log(error);
-//        next(error);
-//    }
-//};
 
 // Logged in user profile
 export const myProfile = async(req:Request, res:Response, next:NextFunction) => {

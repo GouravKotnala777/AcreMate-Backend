@@ -321,7 +321,6 @@ export const assignPlotToClient = async(req:Request, res:Response, next:NextFunc
             findPlotByID.plotStatus = "completed";
         }
 
-        //const updatePlot = await findPlotByID.save();
         let updatePlot = null;
         try {
             const newSlip = await Slip.create({
