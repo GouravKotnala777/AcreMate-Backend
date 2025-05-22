@@ -30,7 +30,7 @@ It is a backend part of real-estate land management service. It manages apis for
 - Agent CRUD
 - Client CRUD
 - Slip create/read/cancel
-- Plot create/read/update/cancel
+- Plot create/read/update/cancel(detatch from client)/delete
 - Logout
 
 
@@ -87,6 +87,7 @@ server-url : http://localhost:8000/api/v1
 - (POST) `/plot/create-plots` -> for creating single or multiple new plots at a single time
 - (POST) `/plot/assign`       -> for assigning vacant plot to client
 - (POST) `/plot/reset`        -> for detaching a occupied plot from client and making it vacant
+- (DELETE) `/plot/delete`     -> for deleting single plot by plotID
 
 #### site related api endpoints
 - (GET)    `/site/all-sites`   -> for getting all sites
