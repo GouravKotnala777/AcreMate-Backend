@@ -35,7 +35,8 @@ export const getSearchedSuggesstions = async(req:Request, res:Response, next:Nex
             guardian:{
                 $regex:searchQuery,
                 $options:"i"
-            }
+            },
+            ownerShipStatus:{$ne:"cancelled"}
         }).select("guardian");
 
         const allNefts = await Slip.find({
