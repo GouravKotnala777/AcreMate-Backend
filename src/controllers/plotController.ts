@@ -425,6 +425,10 @@ export const deletePlot = async(req:Request, res:Response, next:NextFunction) =>
         
         if (!findPlotByIDAndDelete) return next(new ErrorHandler("Plot not exist", 404));
         
+        const client = await Client.findByIdAndUpdate(findPlotByIDAndDelete.clientID, {
+            ownerShipStatus:"cancelled"
+        });
+
         await Site.findOneAndUpdate({
             siteName:findPlotByIDAndDelete.site
         }, {$inc:{soldArea:-(findPlotByIDAndDelete.size)}});
