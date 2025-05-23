@@ -421,7 +421,6 @@ export const updatePlotCoordinates = async(req:Request, res:Response, next:NextF
 export const deletePlot = async(req:Request, res:Response, next:NextFunction) => {
     try {
         const {plotID}:{plotID:ObjectId} = req.body;
-
         const findPlotByIDAndDelete = await Plot.findByIdAndDelete(plotID);
         
         if (!findPlotByIDAndDelete) return next(new ErrorHandler("Plot not exist", 404));

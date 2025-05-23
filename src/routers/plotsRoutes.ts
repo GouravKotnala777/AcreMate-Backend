@@ -11,6 +11,6 @@ plotRouter.route("/create-plots").post(isUserAuthenticated, createPlots);
 plotRouter.route("/assign").post(isUserAuthenticated, assignPlotToClient);
 plotRouter.route("/update-coordinates").put(isUserAuthenticated, updatePlotCoordinates);
 plotRouter.route("/reset").post(isUserAuthenticated, detachClientFromPlot);
-plotRouter.route("/delete").delete(isUserAuthenticated, deletePlot);
+plotRouter.route("/delete-plot").delete(isUserAuthenticated, deletePlot);
 
 export default plotRouter;
